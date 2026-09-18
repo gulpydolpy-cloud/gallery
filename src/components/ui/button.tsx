@@ -16,6 +16,8 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        rose: "bg-rose text-rose-foreground shadow hover:bg-rose/90 rounded-full",
+        video: "text-on-video hover:bg-on-video/15 rounded-full [&_svg]:size-7 h-12 w-12",
       },
       size: {
         default: "h-9 px-4 py-2",
