@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      banners: {
+        Row: {
+          active: boolean
+          bg_color: string
+          created_at: string
+          created_by: string
+          id: string
+          message: string
+          text_color: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bg_color?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          message: string
+          text_color?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bg_color?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          message?: string
+          text_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bans: {
         Row: {
           banned_by: string
@@ -46,25 +79,37 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_path: string | null
           parent_id: string | null
+          sticker_path: string | null
           user_id: string
           video_id: string
+          voice_duration: number | null
+          voice_path: string | null
         }
         Insert: {
-          content: string
+          content?: string
           created_at?: string
           id?: string
+          image_path?: string | null
           parent_id?: string | null
+          sticker_path?: string | null
           user_id: string
           video_id: string
+          voice_duration?: number | null
+          voice_path?: string | null
         }
         Update: {
           content?: string
           created_at?: string
           id?: string
+          image_path?: string | null
           parent_id?: string | null
+          sticker_path?: string | null
           user_id?: string
           video_id?: string
+          voice_duration?: number | null
+          voice_path?: string | null
         }
         Relationships: [
           {
@@ -87,16 +132,19 @@ export type Database = {
         Row: {
           conversation_id: string
           joined_at: string
+          role: string
           user_id: string
         }
         Insert: {
           conversation_id: string
           joined_at?: string
+          role?: string
           user_id: string
         }
         Update: {
           conversation_id?: string
           joined_at?: string
+          role?: string
           user_id?: string
         }
         Relationships: [
@@ -111,6 +159,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          avatar_path: string | null
           created_at: string
           created_by: string
           id: string
@@ -118,6 +167,7 @@ export type Database = {
           name: string | null
         }
         Insert: {
+          avatar_path?: string | null
           created_at?: string
           created_by: string
           id?: string
@@ -125,6 +175,7 @@ export type Database = {
           name?: string | null
         }
         Update: {
+          avatar_path?: string | null
           created_at?: string
           created_by?: string
           id?: string
@@ -183,24 +234,36 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          image_path: string | null
           sender_id: string
+          sticker_path: string | null
           video_id: string | null
+          voice_duration: number | null
+          voice_path: string | null
         }
         Insert: {
           content?: string
           conversation_id: string
           created_at?: string
           id?: string
+          image_path?: string | null
           sender_id: string
+          sticker_path?: string | null
           video_id?: string | null
+          voice_duration?: number | null
+          voice_path?: string | null
         }
         Update: {
           content?: string
           conversation_id?: string
           created_at?: string
           id?: string
+          image_path?: string | null
           sender_id?: string
+          sticker_path?: string | null
           video_id?: string | null
+          voice_duration?: number | null
+          voice_path?: string | null
         }
         Relationships: [
           {
@@ -310,6 +373,62 @@ export type Database = {
           },
         ]
       }
+      sticker_packs: {
+        Row: {
+          created_at: string
+          creator_id: string | null
+          id: string
+          is_official: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id?: string | null
+          id?: string
+          is_official?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string | null
+          id?: string
+          is_official?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      stickers: {
+        Row: {
+          created_at: string
+          id: string
+          pack_id: string
+          sort: number
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pack_id: string
+          sort?: number
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pack_id?: string
+          sort?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stickers_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "sticker_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -332,8 +451,10 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          edit: Json
           hashtags: string[]
           id: string
+          shares: number
           storage_path: string
           title: string
           user_id: string
@@ -342,8 +463,10 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string
+          edit?: Json
           hashtags?: string[]
           id?: string
+          shares?: number
           storage_path: string
           title?: string
           user_id: string
@@ -352,8 +475,10 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          edit?: Json
           hashtags?: string[]
           id?: string
+          shares?: number
           storage_path?: string
           title?: string
           user_id?: string
@@ -373,8 +498,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_shares: { Args: { _video_id: string }; Returns: undefined }
       increment_views: { Args: { _video_id: string }; Returns: undefined }
       is_banned: { Args: { _user_id: string }; Returns: boolean }
+      is_conv_admin: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_member: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
