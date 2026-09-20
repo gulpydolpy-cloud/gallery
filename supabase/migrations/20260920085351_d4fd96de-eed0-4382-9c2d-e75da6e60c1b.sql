@@ -1,0 +1,4 @@
+CREATE POLICY "Anyone can read chat media" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'media');
+CREATE POLICY "Users upload own chat media" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'media' AND (storage.foldername(name))[1] = auth.uid()::text AND NOT public.is_banned(auth.uid()));
+CREATE POLICY "Users update own chat media" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'media' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "Owners and admins delete chat media" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'media' AND ((storage.foldername(name))[1] = auth.uid()::text OR public.has_role(auth.uid(), 'admin')));
