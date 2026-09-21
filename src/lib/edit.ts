@@ -30,6 +30,9 @@ export type VideoEdit = {
   speed: number;
   /** 0 – 1.5 */
   volume: number;
+  /** trim window in seconds; trimEnd of 0 means "to the end" */
+  trimStart: number;
+  trimEnd: number;
 };
 
 export const EDITOR_FONTS = [
@@ -41,7 +44,10 @@ export const EDITOR_FONTS = [
 
 export const EDITOR_COLORS = ["#ffffff", "#000000", "#ff2d55", "#ffd60a", "#34c759", "#0a84ff", "#bf5af2"] as const;
 
-export const defaultEdit = (): VideoEdit => ({ overlays: [], speed: 1, volume: 1 });
+export const defaultEdit = (): VideoEdit => ({ overlays: [], speed: 1, volume: 1, trimStart: 0, trimEnd: 0 });
+
+const num = (v: unknown, min: number, max: number, fallback: number) =>
+  typeof v === "number" && Number.isFinite(v) && v >= min && v <= max ? v : fallback;
 
 export function parseEdit(value: unknown): VideoEdit {
   const base = defaultEdit();
@@ -49,8 +55,10 @@ export function parseEdit(value: unknown): VideoEdit {
   const v = value as Partial<VideoEdit>;
   return {
     overlays: Array.isArray(v.overlays) ? (v.overlays.filter(Boolean) as Overlay[]) : [],
-    speed: typeof v.speed === "number" && v.speed >= 0.25 && v.speed <= 4 ? v.speed : 1,
-    volume: typeof v.volume === "number" && v.volume >= 0 && v.volume <= 1.5 ? v.volume : 1,
+    speed: num(v.speed, 0.25, 4, 1),
+    volume: num(v.volume, 0, 1.5, 1),
+    trimStart: num(v.trimStart, 0, 60 * 60, 0),
+    trimEnd: num(v.trimEnd, 0, 60 * 60, 0),
   };
 }
 
