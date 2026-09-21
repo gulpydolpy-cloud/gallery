@@ -347,6 +347,38 @@ export type Database = {
           },
         ]
       }
+      reposts: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposts_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saves: {
         Row: {
           created_at: string
@@ -447,8 +479,35 @@ export type Database = {
         }
         Relationships: []
       }
+      video_views: {
+        Row: {
+          last_viewed_at: string
+          video_id: string
+          viewer_id: string
+        }
+        Insert: {
+          last_viewed_at?: string
+          video_id: string
+          viewer_id: string
+        }
+        Update: {
+          last_viewed_at?: string
+          video_id?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_views_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
+          boost_likes: number
           created_at: string
           description: string
           edit: Json
@@ -461,6 +520,7 @@ export type Database = {
           views: number
         }
         Insert: {
+          boost_likes?: number
           created_at?: string
           description?: string
           edit?: Json
@@ -473,6 +533,7 @@ export type Database = {
           views?: number
         }
         Update: {
+          boost_likes?: number
           created_at?: string
           description?: string
           edit?: Json
@@ -491,6 +552,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_boost: {
+        Args: { _likes: number; _video_id: string; _views: number }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -509,6 +574,7 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      register_view: { Args: { _video_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
