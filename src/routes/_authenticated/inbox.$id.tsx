@@ -1,3 +1,5 @@
+import { AttachmentView } from "@/components/AttachmentView";
+import { MediaComposer } from "@/components/MediaComposer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Send } from "lucide-react";
@@ -81,18 +83,34 @@ function ChatPage() {
                 {m.video_id ? <SharedVideo id={m.video_id} /> : null}
                 {m.content && (!m.video_id || m.content !== "Shared a video") && (
                   <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>{m.content}</p>
+              <AttachmentView
+  image_path={m.image_path}
+  sticker_path={m.sticker_path}
+  voice_path={m.voice_path}
+  voice_duration={m.voice_duration}
+  mine={mine}
+/>
+
                 )}
               </div>
             </div>
           );
         })}
         <div ref={bottom} />
-      </div>
-      <form onSubmit={send} className="flex gap-2 border-t p-3">
-        <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Message…" className="rounded-full" maxLength={2000} />
-        <Button type="submit" variant="rose" size="icon" disabled={!text.trim()} aria-label="Send"><Send /></Button>
-      </form>
-    </div>
+    <div className="border-t p-3">
+  {user && (
+    <MediaComposer
+      userId={user.id}
+      placeholder="Message…"
+      onSend={async (content, attachment) => {
+        await sendMessage(id, user.id, content, attachment);
+        qc.invalidateQueries({ queryKey: ["messages", id] });
+        qc.invalidateQueries({ queryKey: ["conversations"] });
+      }}
+    />
+  )}
+</div>
+
   );
 }
 
