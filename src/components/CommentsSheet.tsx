@@ -1,3 +1,5 @@
+import { AttachmentView } from "@/components/AttachmentView";
+import { MediaComposer, type Attachment } from "@/components/MediaComposer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
@@ -11,7 +13,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import type { ProfileLite } from "@/lib/videos";
 
-type Comment = { id: string; user_id: string; parent_id: string | null; content: string; created_at: string; profile: ProfileLite };
+type Comment = {
+  id: string;
+  user_id: string;
+  parent_id: string | null;
+  content: string;
+  image_path?: string | null;
+  sticker_path?: string | null;
+  voice_path?: string | null;
+  voice_duration?: number | null;
+  created_at: string;
+  profile: ProfileLite;
+};
 
 async function fetchComments(videoId: string): Promise<Comment[]> {
   const { data } = await supabase.from("comments").select("*").eq("video_id", videoId).order("created_at", { ascending: true });
@@ -66,6 +79,14 @@ export function CommentsSheet({ videoId, open, onOpenChange, onCountChange }: { 
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-muted-foreground">@{c.profile.username}</p>
           <p className="text-sm break-words">{c.content}</p>
+          <AttachmentView
+  image_path={c.image_path}
+  sticker_path={c.sticker_path}
+  voice_path={c.voice_path}
+  voice_duration={c.voice_duration}
+  mine={user?.id === c.user_id}
+/>
+          
           <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
             <span>{new Date(c.created_at).toLocaleDateString()}</span>
             <button onClick={() => setReplyTo(c)} className="font-semibold">Reply</button>
@@ -95,18 +116,40 @@ export function CommentsSheet({ videoId, open, onOpenChange, onCountChange }: { 
             <Item key={c.id} c={c} depth={0} />
           ))}
         </div>
-        <form onSubmit={send} className="border-t p-3">
-          {replyTo && (
-            <p className="mb-1 flex justify-between text-xs text-muted-foreground">
-              Replying to @{replyTo.profile.username}
-              <button type="button" onClick={() => setReplyTo(null)}>Cancel</button>
-            </p>
-          )}
-          <div className="flex gap-2">
-            <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a comment…" maxLength={500} className="rounded-full" />
-            <Button type="submit" variant="rose" disabled={!text.trim()}>Post</Button>
-          </div>
-        </form>
+       <div className="border-t p-3">
+  {replyTo && (
+    <p className="mb-2 flex justify-between text-xs text-muted-foreground">
+      Replying to @{replyTo.profile.username}
+      <button type="button" onClick={() => setReplyTo(null)} className="font-semibold underline">Cancel</button>
+    </p>
+  )}
+  {user ? (
+    <MediaComposer
+      userId={user.id}
+      placeholder={replyTo ? `Reply to @${replyTo.profile.username}…` : "Add a comment…"}
+      onSend={async (content, attachment) => {
+        const { error } = await supabase.from("comments").insert({
+          video_id: videoId,
+          user_id: user.id,
+          content,
+          parent_id: replyTo?.id ?? null,
+          image_path: attachment.image_path ?? null,
+          sticker_path: attachment.sticker_path ?? null,
+          voice_path: attachment.voice_path ?? null,
+          voice_duration: attachment.voice_duration ?? null,
+        });
+        if (error) return toast.error(error.message);
+        setReplyTo(null);
+        qc.invalidateQueries({ queryKey: ["comments", videoId] });
+      }}
+    />
+  ) : (
+    <p className="py-2 text-center text-xs text-muted-foreground">
+      <button onClick={() => navigate({ to: "/auth" })} className="font-bold underline">Log in</button> to comment
+    </p>
+  )}
+</div>
+
       </SheetContent>
     </Sheet>
   );
