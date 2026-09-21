@@ -81,16 +81,15 @@ function ChatPage() {
               {!mine && sender && <UserAvatar profile={sender} size="xs" />}
               <div className={cn("max-w-[75%] space-y-1", mine && "items-end")}>
                 {!mine && conv?.is_group && sender && <p className="px-1 text-[10px] text-muted-foreground">@{sender.username}</p>}
-                {m.video_id ? <SharedVideo id={m.video_id} /> : null}
-                            {m.content && (!m.video_id || m.content !== "Shared a video") && (
-                {m.content?.startsWith("STICKER_PACK:") ? (
-                  <SharedStickerPack rawContent={m.content} />
-                ) : (
-                  m.content && (!m.video_id || m.content !== "Shared a video") && (
-                    <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>{m.content}</p>
-                  )
-                )}
-
+    {m.video_id ? <SharedVideo id={m.video_id} /> : null}
+{m.content?.startsWith("STICKER_PACK:") ? (
+  <SharedStickerPack rawContent={m.content} />
+) : (
+  m.content && (!m.video_id || m.content !== "Shared a video") && (
+    <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>{m.content}</p>
+  )
+)}
+                
                 <AttachmentView
                   image_path={m.image_path}
                   sticker_path={m.sticker_path}
@@ -137,7 +136,11 @@ function SharedVideo({ id }: { id: string }) {
       {src && <video src={src} muted playsInline preload="metadata" className="aspect-[9/16] w-full object-cover" />}
       <p className="truncate bg-secondary px-2 py-1 text-xs font-semibold">{video.title || "Shared video"}</p>
     </Link>
+  );
+}
+
 function SharedStickerPack({ rawContent }: { rawContent: string }) {
+  
   const [, packId, packName] = rawContent.split(":");
   const qc = useQueryClient();
   const [saved, setSaved] = useState(() => {
