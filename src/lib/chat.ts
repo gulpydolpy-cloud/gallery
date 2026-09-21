@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ProfileLite } from "@/lib/videos";
+import type { Attachment } from "@/components/MediaComposer";
 
 export type ConversationSummary = {
   id: string;
@@ -60,7 +61,22 @@ export async function createConversation(me: string, others: string[], name: str
   return conv.id;
 }
 
-export async function sendMessage(conversationId: string, sender: string, content: string, videoId?: string | null) {
-  const { error } = await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: sender, content, video_id: videoId ?? null });
+export async function sendMessage(
+  conversationId: string,
+  sender: string,
+  content: string,
+  attachment?: Attachment | null,
+  videoId?: string | null
+) {
+  const { error } = await supabase.from("messages").insert({
+    conversation_id: conversationId,
+    sender_id: sender,
+    content,
+    image_path: attachment?.image_path ?? null,
+    sticker_path: attachment?.sticker_path ?? null,
+    voice_path: attachment?.voice_path ?? null,
+    voice_duration: attachment?.voice_duration ?? null,
+    video_id: videoId ?? null,
+  });
   if (error) throw error;
 }
