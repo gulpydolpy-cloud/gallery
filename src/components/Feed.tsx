@@ -8,7 +8,6 @@ export function Feed({ spec, empty }: { spec: FeedSpec; empty?: React.ReactNode 
   const { user } = useAuth();
   const { data: videos, isLoading } = useQuery({ queryKey: feedKey(spec, user?.id), queryFn: () => fetchFeed(spec, user?.id) });
   const [active, setActive] = useState(0);
-  const [muted, setMuted] = useState(true);
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +32,7 @@ export function Feed({ spec, empty }: { spec: FeedSpec; empty?: React.ReactNode 
     <div ref={container} className="snap-feed h-[calc(100vh-7rem)] overflow-y-auto md:h-screen">
       {videos.map((v, i) => (
         <div key={v.id} data-index={i} className="snap-item h-full">
-          <VideoCard video={v} active={i === active} muted={muted} onToggleMute={() => setMuted((m) => !m)} />
+          <VideoCard video={v} active={i === active} />
         </div>
       ))}
     </div>
