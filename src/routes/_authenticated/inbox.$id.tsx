@@ -81,36 +81,37 @@ function ChatPage() {
               <div className={cn("max-w-[75%] space-y-1", mine && "items-end")}>
                 {!mine && conv?.is_group && sender && <p className="px-1 text-[10px] text-muted-foreground">@{sender.username}</p>}
                 {m.video_id ? <SharedVideo id={m.video_id} /> : null}
-                {m.content && (!m.video_id || m.content !== "Shared a video") && (
+                            {m.content && (!m.video_id || m.content !== "Shared a video") && (
                   <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>{m.content}</p>
-              <AttachmentView
-  image_path={m.image_path}
-  sticker_path={m.sticker_path}
-  voice_path={m.voice_path}
-  voice_duration={m.voice_duration}
-  mine={mine}
-/>
-
                 )}
+                <AttachmentView
+                  image_path={m.image_path}
+                  sticker_path={m.sticker_path}
+                  voice_path={m.voice_path}
+                  voice_duration={m.voice_duration}
+                  mine={mine}
+                />
               </div>
             </div>
           );
         })}
         <div ref={bottom} />
-    <div className="border-t p-3">
-  {user && (
-    <MediaComposer
-      userId={user.id}
-      placeholder="Message…"
-      onSend={async (content, attachment) => {
-        await sendMessage(id, user.id, content, attachment);
-        qc.invalidateQueries({ queryKey: ["messages", id] });
-        qc.invalidateQueries({ queryKey: ["conversations"] });
-      }}
-    />
-  )}
-</div>
+      </div>
 
+      <div className="border-t p-3">
+        {user && (
+          <MediaComposer
+            userId={user.id}
+            placeholder="Message…"
+            onSend={async (content, attachment) => {
+              await sendMessage(id, user.id, content, attachment);
+              qc.invalidateQueries({ queryKey: ["messages", id] });
+              qc.invalidateQueries({ queryKey: ["conversations"] });
+            }}
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
