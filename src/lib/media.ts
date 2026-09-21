@@ -3,13 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ONE_DAY = 60 * 60 * 24;
 
-export async function signedUrl(bucket: "videos" | "avatars", path: string | null | undefined) {
+export type Bucket = "videos" | "avatars" | "media";
+
+export async function signedUrl(bucket: Bucket, path: string | null | undefined) {
   if (!path) return null;
   const { data } = await supabase.storage.from(bucket).createSignedUrl(path, ONE_DAY);
   return data?.signedUrl ?? null;
 }
 
-export function useSignedUrl(bucket: "videos" | "avatars", path: string | null | undefined) {
+export function useSignedUrl(bucket: Bucket, path: string | null | undefined) {
   return useQuery({
     queryKey: ["signed", bucket, path],
     queryFn: () => signedUrl(bucket, path),
