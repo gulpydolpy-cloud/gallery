@@ -1,4 +1,5 @@
 import { AttachmentView } from "@/components/AttachmentView";
+import { StickerImage } from "@/components/StickerPicker";
 import { MediaComposer } from "@/components/MediaComposer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -82,8 +83,14 @@ function ChatPage() {
                 {!mine && conv?.is_group && sender && <p className="px-1 text-[10px] text-muted-foreground">@{sender.username}</p>}
                 {m.video_id ? <SharedVideo id={m.video_id} /> : null}
                             {m.content && (!m.video_id || m.content !== "Shared a video") && (
-                  <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>{m.content}</p>
+                {m.content?.startsWith("STICKER_PACK:") ? (
+                  <SharedStickerPack rawContent={m.content} />
+                ) : (
+                  m.content && (!m.video_id || m.content !== "Shared a video") && (
+                    <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>{m.content}</p>
+                  )
                 )}
+
                 <AttachmentView
                   image_path={m.image_path}
                   sticker_path={m.sticker_path}
@@ -100,13 +107,19 @@ function ChatPage() {
 
       <div className="border-t p-3">
         {user && (
-          <MediaComposer
+                 <MediaComposer
             userId={user.id}
             placeholder="Message…"
             onSend={async (content, attachment) => {
               await sendMessage(id, user.id, content, attachment);
               qc.invalidateQueries({ queryKey: ["messages", id] });
               qc.invalidateQueries({ queryKey: ["conversations"] });
+            }}
+            onSharePack={async (packId, packName) => {
+              await sendMessage(id, user.id, `STICKER_PACK:${packId}:${packName}`);
+              qc.invalidateQueries({ queryKey: ["messages", id] });
+              qc.invalidateQueries({ queryKey: ["conversations"] });
+              toast.success(`Sent "${packName}" to chat!`);
             }}
           />
         )}
@@ -124,5 +137,68 @@ function SharedVideo({ id }: { id: string }) {
       {src && <video src={src} muted playsInline preload="metadata" className="aspect-[9/16] w-full object-cover" />}
       <p className="truncate bg-secondary px-2 py-1 text-xs font-semibold">{video.title || "Shared video"}</p>
     </Link>
+function SharedStickerPack({ rawContent }: { rawContent: string }) {
+  const [, packId, packName] = rawContent.split(":");
+  const qc = useQueryClient();
+  const [saved, setSaved] = useState(() => {
+    try {
+      const list = JSON.parse(localStorage.getItem("gallery_saved_packs") || "[]");
+      return list.includes(packId);
+    } catch {
+      return false;
+    }
+  });
+
+  const { data: pack } = useQuery({
+    queryKey: ["sticker-pack-preview", packId],
+    queryFn: async () => {
+      const [{ data: p }, { data: s }] = await Promise.all([
+        supabase.from("sticker_packs").select("id, name").eq("id", packId).maybeSingle(),
+        supabase.from("stickers").select("id, storage_path").eq("pack_id", packId).order("sort").limit(4),
+      ]);
+      return { ...p, stickers: s ?? [] };
+    },
+  });
+
+  const handleSave = () => {
+    try {
+      const list: string[] = JSON.parse(localStorage.getItem("gallery_saved_packs") || "[]");
+      if (!list.includes(packId)) {
+        list.push(packId);
+        localStorage.setItem("gallery_saved_packs", JSON.stringify(list));
+      }
+      setSaved(true);
+      toast.success(`Pack "${packName || "Stickers"}" added to your stickers!`);
+      qc.invalidateQueries({ queryKey: ["sticker-packs"] });
+    } catch {
+      toast.error("Could not save pack");
+    }
+  };
+
+  return (
+    <div className="w-56 space-y-2 rounded-2xl border bg-card p-3 shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="truncate font-bold text-xs">{packName || pack?.name || "Sticker Pack"}</p>
+        <span className="text-[10px] text-muted-foreground">{pack?.stickers.length ?? 0} stickers</span>
+      </div>
+      <div className="grid grid-cols-4 gap-1 rounded-lg bg-secondary/40 p-1">
+        {pack?.stickers.map((stk) => (
+          <div key={stk.id} className="aspect-square">
+            <StickerImage path={stk.storage_path} className="size-full" />
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant={saved ? "secondary" : "rose"}
+        className="w-full text-xs font-semibold"
+        onClick={handleSave}
+        disabled={saved}
+      >
+        {saved ? "Saved ✓" : "Save Pack"}
+      </Button>
+    </div>
   );
 }
+
