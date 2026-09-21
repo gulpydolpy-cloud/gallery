@@ -20,11 +20,14 @@ export function MediaComposer({
   userId,
   placeholder,
   onSend,
+  onSharePack,
 }: {
   userId: string;
   placeholder: string;
   onSend: (text: string, attachment: Attachment) => Promise<void>;
+  onSharePack?: (packId: string, packName: string) => void;
 }) {
+
   const [text, setText] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [sticker, setSticker] = useState<string | null>(null);
@@ -132,7 +135,11 @@ export function MediaComposer({
             <Button type="button" variant="ghost" size="icon" aria-label="Stickers"><Smile /></Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2" align="start">
-            <StickerPicker onPick={(p) => setSticker(p)} />
+            <StickerPicker
+  userId={userId}
+  onPick={(p) => setSticker(p)}
+  onSharePack={onSharePack}
+/>
           </PopoverContent>
         </Popover>
         <Button type="button" variant="ghost" size="icon" aria-label="Add photo" asChild>
