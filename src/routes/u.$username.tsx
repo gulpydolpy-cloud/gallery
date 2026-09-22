@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { MessageCircle, Settings } from "lucide-react";
 import { useState } from "react";
 import { FollowButton } from "@/components/FollowButton";
+import { GiftPanel } from "@/components/GiftPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VideoGrid } from "@/components/VideoGrid";
 import { BanDialog } from "@/components/BanDialog";
@@ -72,9 +73,12 @@ function ProfilePage() {
       <div className="flex flex-col items-center gap-4 py-6 text-center sm:flex-row sm:items-start sm:text-left">
         <UserAvatar profile={profile} size="xl" />
         <div className="flex-1 space-y-3">
-          <div>
+                   <div>
             <h1 className="text-2xl font-extrabold">{profile.display_name || profile.username}</h1>
             <p className="text-muted-foreground">@{profile.username}</p>
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold">
+              💰 G$ {profile.wallet_balance}
+            </p>
           </div>
           <div className="flex justify-center gap-6 text-sm sm:justify-start">
             <Stat n={stats?.following ?? 0} label="Following" />
@@ -86,8 +90,9 @@ function ProfilePage() {
             {isMe ? (
               <Button variant="outline" asChild><Link to="/settings"><Settings /> Edit profile</Link></Button>
             ) : (
-              <>
+                            <>
                 <FollowButton targetId={profile.id} />
+                <GiftPanel recipientId={profile.id} recipientName={profile.display_name || profile.username} />
                 <Button variant="outline" onClick={message}><MessageCircle /> Message</Button>
                 {isAdmin && <Button variant="destructive" onClick={() => setBan(true)}>Ban user</Button>}
               </>
