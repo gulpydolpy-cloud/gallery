@@ -62,7 +62,7 @@ function UploadPage() {
       clearInterval(tick);
       if (upErr) throw upErr;
       setProgress(90);
-      const { error } = await supabase.from("videos").insert({ user_id: user.id, title: title.trim(), description: description.trim(), hashtags, storage_path: path });
+      const { error } = await supabase.from("videos").insert({ user_id: user.id, title: title.trim(), description: description.trim(), hashtags, storage_path: path, edit: edit as unknown as Record<string, unknown> });
       if (error) throw error;
       setProgress(100);
       toast.success("Your video is live!");
@@ -81,10 +81,10 @@ function UploadPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <div>
           {file ? (
-            <div className="relative mx-auto aspect-[9/16] w-full max-w-sm overflow-hidden rounded-2xl bg-video-bg">
-              {preview && <video src={preview} controls playsInline className="h-full w-full object-contain" />}
-              <Button variant="video" size="icon" className="absolute top-2 right-2 bg-video-bg/60" onClick={() => setFile(null)} aria-label="Remove">
-                <X />
+            <div className="space-y-2">
+              {preview && user && <VideoEditor src={preview} userId={user.id} edit={edit} onChange={setEdit} />}
+              <Button variant="ghost" className="w-full" onClick={() => { setFile(null); setEdit(defaultEdit()); }}>
+                <X /> Choose another video
               </Button>
             </div>
           ) : mode === "record" ? (
