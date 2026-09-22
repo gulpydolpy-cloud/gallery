@@ -128,7 +128,96 @@ export type Database = {
           },
         ]
       }
-      conversation_members: {
+      conversation_members: {      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+        }
+        Relationships: []
+      }
+      gift_events: {
+        Row: {
+          created_at: string
+          gift_type_id: string
+          id: string
+          live_session_id: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          gift_type_id: string
+          id?: string
+          live_session_id?: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          gift_type_id?: string
+          id?: string
+          live_session_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_events_gift_type_id_fkey"
+            columns: ["gift_type_id"]
+            isOneToOne: false
+            referencedRelation: "gift_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_types: {
+        Row: {
+          animation_key: string
+          cooldown_seconds: number
+          g_dollar_value: number
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          max_per_live: number | null
+          min_follower_count: number
+          name: string
+        }
+        Insert: {
+          animation_key: string
+          cooldown_seconds?: number
+          g_dollar_value: number
+          icon_url?: string | null
+          id: string
+          is_active?: boolean
+          max_per_live?: number | null
+          min_follower_count?: number
+          name: string
+        }
+        Update: {
+          animation_key?: string
+          cooldown_seconds?: number
+          g_dollar_value?: number
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          max_per_live?: number | null
+          min_follower_count?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      likes: {
         Row: {
           conversation_id: string
           joined_at: string
@@ -199,6 +288,77 @@ export type Database = {
           created_at?: string
           follower_id?: string
           following_id?: string
+        }
+        Relationships: []
+      }
+      gift_events: {
+        Row: {
+          created_at: string
+          gift_type_id: string
+          id: string
+          live_session_id: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          gift_type_id: string
+          id?: string
+          live_session_id?: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          gift_type_id?: string
+          id?: string
+          live_session_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_events_gift_type_id_fkey"
+            columns: ["gift_type_id"]
+            isOneToOne: false
+            referencedRelation: "gift_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_types: {
+        Row: {
+          animation_key: string
+          cooldown_seconds: number
+          g_dollar_value: number
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          max_per_live: number | null
+          min_follower_count: number
+          name: string
+        }
+        Insert: {
+          animation_key: string
+          cooldown_seconds?: number
+          g_dollar_value: number
+          icon_url?: string | null
+          id: string
+          is_active?: boolean
+          max_per_live?: number | null
+          min_follower_count?: number
+          name: string
+        }
+        Update: {
+          animation_key?: string
+          cooldown_seconds?: number
+          g_dollar_value?: number
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          max_per_live?: number | null
+          min_follower_count?: number
+          name?: string
         }
         Relationships: []
       }
@@ -290,6 +450,7 @@ export type Database = {
           display_name: string | null
           id: string
           username: string
+          wallet_balance: number
         }
         Insert: {
           avatar_path?: string | null
@@ -298,6 +459,7 @@ export type Database = {
           display_name?: string | null
           id: string
           username: string
+          wallet_balance?: number
         }
         Update: {
           avatar_path?: string | null
@@ -306,6 +468,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           username?: string
+          wallet_balance?: number
         }
         Relationships: []
       }
@@ -575,6 +738,10 @@ export type Database = {
         Returns: boolean
       }
       register_view: { Args: { _video_id: string }; Returns: boolean }
+            send_gift: {
+        Args: { _gift_type_id: string; _recipient_id: string }
+        Returns: { animation_key: string; new_balance: number }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
