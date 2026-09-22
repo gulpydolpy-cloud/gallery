@@ -16,7 +16,7 @@ export function VideoSwiper({ videos, startIndex, onClose }: { videos: VideoWith
     items[startIndex]?.scrollIntoView();
     const obs = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting && e.intersectionRatio > 0.6) setActive(Number((e.target as HTMLElement).dataset.index));
+        for (const e of entries) if (e.isIntersecting && e.intersectionRatio > 0.6) setActive(Number((e.target as HTMLElement).dataset['index']));
       },
       { root, threshold: [0.6] },
     );
