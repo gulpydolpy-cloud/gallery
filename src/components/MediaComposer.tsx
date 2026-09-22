@@ -24,8 +24,8 @@ export function MediaComposer({
 }: {
   userId: string;
   placeholder: string;
-  onSend: (text: string, attachment: Attachment) => Promise<void>;
-  onSharePack?: (packId: string, packName: string) => void;
+  onSend: (text: string, attachment: Attachment) => Promise<unknown>;
+  onSharePack?: ((packId: string, packName: string) => void) | undefined;
 }) {
 
   const [text, setText] = useState("");

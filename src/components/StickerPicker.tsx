@@ -37,9 +37,9 @@ export function StickerPicker({
   onPick,
   onSharePack,
 }: {
-  userId?: string;
+  userId?: string | undefined;
   onPick: (path: string) => void;
-  onSharePack?: (packId: string, packName: string) => void;
+  onSharePack?: ((packId: string, packName: string) => void) | undefined;
 }) {
   const { data: allPacks = [] } = useQuery({
     queryKey: ["sticker-packs"],

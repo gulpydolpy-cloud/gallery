@@ -62,7 +62,7 @@ function UploadPage() {
       clearInterval(tick);
       if (upErr) throw upErr;
       setProgress(90);
-      const { error } = await supabase.from("videos").insert({ user_id: user.id, title: title.trim(), description: description.trim(), hashtags, storage_path: path, edit: edit as unknown as Record<string, unknown> });
+      const { error } = await supabase.from("videos").insert({ user_id: user.id, title: title.trim(), description: description.trim(), hashtags, storage_path: path, edit: JSON.parse(JSON.stringify(edit)) });
       if (error) throw error;
       setProgress(100);
       toast.success("Your video is live!");

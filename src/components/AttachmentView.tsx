@@ -3,11 +3,11 @@ import { VoiceNote } from "@/components/VoiceNote";
 import { useSignedUrl } from "@/lib/media";
 
 type Props = {
-  image_path?: string | null;
-  sticker_path?: string | null;
-  voice_path?: string | null;
-  voice_duration?: number | null;
-  mine?: boolean;
+  image_path?: string | null | undefined;
+  sticker_path?: string | null | undefined;
+  voice_path?: string | null | undefined;
+  voice_duration?: number | null | undefined;
+  mine?: boolean | undefined;
 };
 
 function Photo({ path }: { path: string }) {

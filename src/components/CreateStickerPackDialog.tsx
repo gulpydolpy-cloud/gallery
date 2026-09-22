@@ -52,7 +52,7 @@ export function CreateStickerPackDialog({ userId }: { userId: string }) {
       // 2. Upload images and insert stickers
       const stickers = [];
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        const file = files[i]!;
         const ext = extFor(file, "png");
         const path = await uploadToMedia(userId, file, "stickers", ext);
         stickers.push({
