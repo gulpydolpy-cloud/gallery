@@ -44,7 +44,10 @@ function SettingsPage() {
     setBusy(true);
     const { error } = await supabase.from("profiles").update({ display_name: displayName.trim() || profile.username, bio: bio.trim() }).eq("id", user.id);
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refreshProfile();
     toast.success("Profile updated");
     navigate({ to: "/u/$username", params: { username: profile.username } });
@@ -55,7 +58,10 @@ function SettingsPage() {
     const ext = file.name.split(".").pop() || "jpg";
     const path = `${user.id}/avatar-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await supabase.from("profiles").update({ avatar_path: path }).eq("id", user.id);
     await refreshProfile();
     toast.success("Photo updated");

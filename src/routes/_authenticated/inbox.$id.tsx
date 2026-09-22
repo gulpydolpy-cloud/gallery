@@ -141,7 +141,9 @@ function SharedVideo({ id }: { id: string }) {
 
 function SharedStickerPack({ rawContent }: { rawContent: string }) {
   
-  const [, packId, packName] = rawContent.split(":");
+  const parts = rawContent.split(":");
+  const packId = parts[1] ?? "";
+  const packName = parts[2] ?? "";
   const qc = useQueryClient();
   const [saved, setSaved] = useState(() => {
     try {

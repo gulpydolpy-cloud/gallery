@@ -4,6 +4,8 @@ import { Camera, Upload as UploadIcon, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { VideoRecorder } from "@/components/VideoRecorder";
+import { VideoEditor } from "@/components/VideoEditor";
+import { defaultEdit, type VideoEdit } from "@/lib/edit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +40,7 @@ function UploadPage() {
   const [tags, setTags] = useState("");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [edit, setEdit] = useState<VideoEdit>(defaultEdit());
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const hashtags = parseHashtags(tags);
@@ -45,7 +48,10 @@ function UploadPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !user) return;
-    if (file.size > 200 * 1024 * 1024) return toast.error("Videos must be under 200MB");
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("Videos must be under 200MB");
+      return;
+    }
     setBusy(true);
     setProgress(10);
     try {
@@ -56,7 +62,7 @@ function UploadPage() {
       clearInterval(tick);
       if (upErr) throw upErr;
       setProgress(90);
-      const { error } = await supabase.from("videos").insert({ user_id: user.id, title: title.trim(), description: description.trim(), hashtags, storage_path: path });
+      const { error } = await supabase.from("videos").insert({ user_id: user.id, title: title.trim(), description: description.trim(), hashtags, storage_path: path, edit: JSON.parse(JSON.stringify(edit)) });
       if (error) throw error;
       setProgress(100);
       toast.success("Your video is live!");
@@ -75,10 +81,10 @@ function UploadPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <div>
           {file ? (
-            <div className="relative mx-auto aspect-[9/16] w-full max-w-sm overflow-hidden rounded-2xl bg-video-bg">
-              {preview && <video src={preview} controls playsInline className="h-full w-full object-contain" />}
-              <Button variant="video" size="icon" className="absolute top-2 right-2 bg-video-bg/60" onClick={() => setFile(null)} aria-label="Remove">
-                <X />
+            <div className="space-y-2">
+              {preview && user && <VideoEditor src={preview} userId={user.id} edit={edit} onChange={setEdit} />}
+              <Button variant="ghost" className="w-full" onClick={() => { setFile(null); setEdit(defaultEdit()); }}>
+                <X /> Choose another video
               </Button>
             </div>
           ) : mode === "record" ? (

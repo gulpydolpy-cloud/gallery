@@ -31,8 +31,8 @@ export function CreateStickerPackDialog({ userId }: { userId: string }) {
   };
 
   const handleCreate = async () => {
-    if (!name.trim()) return toast.error("Please enter a pack name");
-    if (files.length === 0) return toast.error("Please add at least 1 sticker image");
+    if (!name.trim()) { toast.error("Please enter a pack name"); return; }
+    if (files.length === 0) { toast.error("Please add at least 1 sticker image"); return; }
 
     setBusy(true);
     try {
@@ -52,7 +52,7 @@ export function CreateStickerPackDialog({ userId }: { userId: string }) {
       // 2. Upload images and insert stickers
       const stickers = [];
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        const file = files[i]!;
         const ext = extFor(file, "png");
         const path = await uploadToMedia(userId, file, "stickers", ext);
         stickers.push({

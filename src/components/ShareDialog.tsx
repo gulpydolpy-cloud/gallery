@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Copy, Search, Send } from "lucide-react";
+import { Copy, Download, Search, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -10,13 +10,36 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { conversationTitle, fetchConversations, openDirectConversation, sendMessage } from "@/lib/chat";
-import type { VideoWithMeta } from "@/lib/videos";
+import { incrementShares, type VideoWithMeta } from "@/lib/videos";
+import { useSignedUrl } from "@/lib/media";
+import { downloadFile } from "@/lib/uploads";
 
-export function ShareDialog({ video, open, onOpenChange }: { video: VideoWithMeta; open: boolean; onOpenChange: (o: boolean) => void }) {
+export function ShareDialog({
+  video,
+  open,
+  onOpenChange,
+  onShared,
+}: {
+  video: VideoWithMeta;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onShared?: (() => void) | undefined;
+}) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [saving, setSaving] = useState(false);
+  const { data: videoUrl } = useSignedUrl("videos", open ? video.storage_path : null);
   const url = typeof window !== "undefined" ? `${window.location.origin}/video/${video.id}` : "";
+
+  const countShare = async () => {
+    try {
+      await incrementShares(video.id);
+      onShared?.();
+    } catch {
+      /* counters are best-effort */
+    }
+  };
 
   const { data: convs = [] } = useQuery({ queryKey: ["conversations", user?.id], queryFn: () => fetchConversations(user!.id), enabled: open && Boolean(user) });
   const { data: people = [] } = useQuery({
@@ -31,11 +54,27 @@ export function ShareDialog({ video, open, onOpenChange }: { video: VideoWithMet
   const copy = async () => {
     await navigator.clipboard.writeText(url);
     toast.success("Link copied");
+    await countShare();
+  };
+
+  const save = async () => {
+    if (!videoUrl) return;
+    setSaving(true);
+    try {
+      await downloadFile(videoUrl, `${(video.title || "gallery-video").replace(/[^\p{L}\p{N}_-]+/gu, "-").slice(0, 40)}.mp4`);
+      toast.success("Video saved to your device");
+      await countShare();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const shareTo = async (conversationId: string) => {
-    await sendMessage(conversationId, user!.id, "Shared a video", video.id);
+    await sendMessage(conversationId, user!.id, "Shared a video", null, video.id);
     toast.success("Sent");
+    await countShare();
     onOpenChange(false);
   };
 

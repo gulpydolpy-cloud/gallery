@@ -16,7 +16,7 @@ export function Feed({ spec, empty }: { spec: FeedSpec; empty?: React.ReactNode 
     const items = Array.from(root.querySelectorAll<HTMLElement>("[data-index]"));
     const obs = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting && e.intersectionRatio > 0.6) setActive(Number((e.target as HTMLElement).dataset.index));
+        for (const e of entries) if (e.isIntersecting && e.intersectionRatio > 0.6) setActive(Number((e.target as HTMLElement).dataset['index']));
       },
       { root, threshold: [0.6] },
     );

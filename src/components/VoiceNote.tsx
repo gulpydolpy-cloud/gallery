@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const BARS = [6, 12, 9, 16, 11, 20, 14, 8, 18, 10, 15, 7, 13, 19, 9, 12];
 
-export function VoiceNote({ path, duration, mine }: { path: string; duration?: number | null; mine?: boolean }) {
+export function VoiceNote({ path, duration, mine }: { path: string; duration?: number | null | undefined; mine?: boolean | undefined }) {
   const { data: src } = useSignedUrl("media", path);
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);

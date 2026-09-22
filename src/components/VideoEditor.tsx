@@ -182,16 +182,16 @@ export function VideoEditor({ src, userId, edit, onChange }: { src: string; user
                 </button>
               </div>
               <Row label={`Size ${sel.size.toFixed(0)}`}>
-                <Slider value={[sel.size]} min={3} max={18} step={0.5} onValueChange={([v]) => patchOverlay(sel.id, { size: v })} />
+                <Slider value={[sel.size]} min={3} max={18} step={0.5} onValueChange={(v) => patchOverlay(sel.id, { size: v[0] ?? sel.size })} />
               </Row>
             </>
           ) : (
             <Row label={`Size ${(sel.scale * 100).toFixed(0)}%`}>
-              <Slider value={[sel.scale]} min={0.1} max={1} step={0.01} onValueChange={([v]) => patchOverlay(sel.id, { scale: v })} />
+              <Slider value={[sel.scale]} min={0.1} max={1} step={0.01} onValueChange={(v) => patchOverlay(sel.id, { scale: v[0] ?? sel.scale })} />
             </Row>
           )}
           <Row label={`Rotation ${sel.rotation.toFixed(0)}°`}>
-            <Slider value={[sel.rotation]} min={-180} max={180} step={1} onValueChange={([v]) => patchOverlay(sel.id, { rotation: v })} />
+            <Slider value={[sel.rotation]} min={-180} max={180} step={1} onValueChange={(v) => patchOverlay(sel.id, { rotation: v[0] ?? sel.rotation })} />
           </Row>
           <Row label={`Shows ${formatTime(sel.start)} – ${formatTime(sel.end)}`}>
             <Slider
@@ -199,7 +199,11 @@ export function VideoEditor({ src, userId, edit, onChange }: { src: string; user
               min={0}
               max={Math.max(duration, 1)}
               step={0.1}
-              onValueChange={([s, e]) => patchOverlay(sel.id, { start: s, end: Math.max(e, s + 0.2) })}
+              onValueChange={(v) => {
+                const s = v[0] ?? 0;
+                const e = v[1] ?? s + 0.2;
+                patchOverlay(sel.id, { start: s, end: Math.max(e, s + 0.2) });
+              }}
             />
           </Row>
         </div>
@@ -207,10 +211,10 @@ export function VideoEditor({ src, userId, edit, onChange }: { src: string; user
 
       <div className="space-y-3 rounded-xl border p-3">
         <Row label={`Speed ${edit.speed.toFixed(2)}×`}>
-          <Slider value={[edit.speed]} min={0.5} max={2} step={0.05} onValueChange={([v]) => patch({ speed: v })} />
+          <Slider value={[edit.speed]} min={0.5} max={2} step={0.05} onValueChange={(v) => patch({ speed: v[0] ?? edit.speed })} />
         </Row>
         <Row label={`Volume ${(edit.volume * 100).toFixed(0)}%`}>
-          <Slider value={[edit.volume]} min={0} max={1.5} step={0.05} onValueChange={([v]) => patch({ volume: v })} />
+          <Slider value={[edit.volume]} min={0} max={1.5} step={0.05} onValueChange={(v) => patch({ volume: v[0] ?? edit.volume })} />
         </Row>
         <Row label={`Trim ${formatTime(edit.trimStart)} – ${formatTime(trimEnd)}`}>
           <Slider
@@ -218,7 +222,11 @@ export function VideoEditor({ src, userId, edit, onChange }: { src: string; user
             min={0}
             max={Math.max(duration, 1)}
             step={0.1}
-            onValueChange={([s, e]) => patch({ trimStart: s, trimEnd: Math.max(e, s + 0.5) })}
+            onValueChange={(v) => {
+              const s = v[0] ?? 0;
+              const e = v[1] ?? s + 0.5;
+              patch({ trimStart: s, trimEnd: Math.max(e, s + 0.5) });
+            }}
           />
         </Row>
         <p className="text-xs text-muted-foreground">Playhead {formatTime(time)} · new layers start here</p>
