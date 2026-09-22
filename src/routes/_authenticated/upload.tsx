@@ -40,6 +40,7 @@ function UploadPage() {
   const [tags, setTags] = useState("");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [edit, setEdit] = useState<VideoEdit>(defaultEdit());
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const hashtags = parseHashtags(tags);
@@ -47,7 +48,10 @@ function UploadPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !user) return;
-    if (file.size > 200 * 1024 * 1024) return toast.error("Videos must be under 200MB");
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("Videos must be under 200MB");
+      return;
+    }
     setBusy(true);
     setProgress(10);
     try {
