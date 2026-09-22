@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Copy, Search, Send } from "lucide-react";
+import { Copy, Download, Search, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { conversationTitle, fetchConversations, openDirectConversation, sendMessage } from "@/lib/chat";
-import type { VideoWithMeta } from "@/lib/videos";
+import { incrementShares, type VideoWithMeta } from "@/lib/videos";
+import { useSignedUrl } from "@/lib/media";
+import { downloadFile } from "@/lib/uploads";
 
 export function ShareDialog({
   video,
