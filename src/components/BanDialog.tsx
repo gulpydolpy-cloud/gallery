@@ -28,7 +28,7 @@ export function BanDialog({ user, open, onOpenChange }: { user: { id: string; us
     const hours = duration === "perm" ? null : Number(duration);
     const expires_at = hours ? new Date(Date.now() + hours * 3600_000).toISOString() : null;
     const { error } = await supabase.from("bans").insert({ user_id: user.id, banned_by: me.id, reason, expires_at });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`@${user.username} banned`);
     qc.invalidateQueries({ queryKey: ["admin-bans"] });
     setReason("");

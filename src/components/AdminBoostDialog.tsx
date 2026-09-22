@@ -17,7 +17,7 @@ export function AdminBoostDialog({ videoId, open, onOpenChange }: { videoId: str
     e.preventDefault();
     const l = Number(likes || 0);
     const v = Number(views || 0);
-    if (!Number.isFinite(l) || !Number.isFinite(v) || (!l && !v)) return toast.error("Enter a number of likes or views");
+    if (!Number.isFinite(l) || !Number.isFinite(v) || (!l && !v)) { toast.error("Enter a number of likes or views"); return; }
     setBusy(true);
     try {
       await adminBoost(videoId, Math.trunc(l), Math.trunc(v));

@@ -31,8 +31,8 @@ export function CreateStickerPackDialog({ userId }: { userId: string }) {
   };
 
   const handleCreate = async () => {
-    if (!name.trim()) return toast.error("Please enter a pack name");
-    if (files.length === 0) return toast.error("Please add at least 1 sticker image");
+    if (!name.trim()) { toast.error("Please enter a pack name"); return; }
+    if (files.length === 0) { toast.error("Please add at least 1 sticker image"); return; }
 
     setBusy(true);
     try {

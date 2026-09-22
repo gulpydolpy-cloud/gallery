@@ -55,7 +55,7 @@ export function CommentsSheet({ videoId, open, onOpenChange, onCountChange }: { 
     }
     if (!text.trim()) return;
     const { error } = await supabase.from("comments").insert({ video_id: videoId, user_id: user.id, content: text.trim(), parent_id: replyTo?.id ?? null });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setText("");
     setReplyTo(null);
     qc.invalidateQueries({ queryKey: ["comments", videoId] });
@@ -63,7 +63,7 @@ export function CommentsSheet({ videoId, open, onOpenChange, onCountChange }: { 
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("comments").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["comments", videoId] });
   };
 
@@ -138,7 +138,7 @@ export function CommentsSheet({ videoId, open, onOpenChange, onCountChange }: { 
           voice_path: attachment.voice_path ?? null,
           voice_duration: attachment.voice_duration ?? null,
         });
-        if (error) return toast.error(error.message);
+        if (error) { toast.error(error.message); return; }
         setReplyTo(null);
         qc.invalidateQueries({ queryKey: ["comments", videoId] });
       }}

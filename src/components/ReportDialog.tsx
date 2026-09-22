@@ -11,13 +11,13 @@ const REASONS = ["Spam", "Harassment or bullying", "Nudity or sexual content", "
 
 export function ReportDialog({ videoId, open, onOpenChange }: { videoId: string; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { user } = useAuth();
-  const [reason, setReason] = useState(REASONS[0]);
+  const [reason, setReason] = useState(REASONS[0]!);
   const [details, setDetails] = useState("");
 
   const submit = async () => {
     if (!user) return;
     const { error } = await supabase.from("reports").insert({ video_id: videoId, reporter_id: user.id, reason, details });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Thanks, your report was sent");
     setDetails("");
     onOpenChange(false);

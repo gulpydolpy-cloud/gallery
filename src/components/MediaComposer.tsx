@@ -41,7 +41,7 @@ export function MediaComposer({
 
   const pickImage = async (file: File | null) => {
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) return toast.error("Images must be under 10MB");
+    if (file.size > 10 * 1024 * 1024) { toast.error("Images must be under 10MB"); return; }
     setBusy(true);
     try {
       setImage(await uploadToMedia(userId, file, "images", extFor(file, "jpg")));
