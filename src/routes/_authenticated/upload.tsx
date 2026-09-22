@@ -4,6 +4,8 @@ import { Camera, Upload as UploadIcon, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { VideoRecorder } from "@/components/VideoRecorder";
+import { VideoEditor } from "@/components/VideoEditor";
+import { defaultEdit, type VideoEdit } from "@/lib/edit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
