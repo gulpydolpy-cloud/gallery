@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Compass, Home, MessageCircle, PlusSquare, Shield, User, Users, LogOut, Settings, LogIn } from "lucide-react";
+import { Compass, Home, MessageCircle, PlusSquare, Radio, Shield, User, Users, LogOut, Settings, LogIn } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
@@ -52,6 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/", label: "For You", icon: Home },
     { to: "/following", label: "Following", icon: Users },
     { to: "/explore", label: "Explore", icon: Compass },
+    { to: "/live", label: "Live", icon: Radio },
     { to: "/upload", label: "Upload", icon: PlusSquare },
     { to: "/inbox", label: "Inbox", icon: MessageCircle },
   ] as const;
