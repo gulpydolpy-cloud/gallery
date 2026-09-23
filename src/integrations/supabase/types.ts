@@ -128,96 +128,7 @@ export type Database = {
           },
         ]
       }
-      conversation_members: {      follows: {
-        Row: {
-          created_at: string
-          follower_id: string
-          following_id: string
-        }
-        Insert: {
-          created_at?: string
-          follower_id: string
-          following_id: string
-        }
-        Update: {
-          created_at?: string
-          follower_id?: string
-          following_id?: string
-        }
-        Relationships: []
-      }
-      gift_events: {
-        Row: {
-          created_at: string
-          gift_type_id: string
-          id: string
-          live_session_id: string | null
-          recipient_id: string
-          sender_id: string
-        }
-        Insert: {
-          created_at?: string
-          gift_type_id: string
-          id?: string
-          live_session_id?: string | null
-          recipient_id: string
-          sender_id: string
-        }
-        Update: {
-          created_at?: string
-          gift_type_id?: string
-          id?: string
-          live_session_id?: string | null
-          recipient_id?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gift_events_gift_type_id_fkey"
-            columns: ["gift_type_id"]
-            isOneToOne: false
-            referencedRelation: "gift_types"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gift_types: {
-        Row: {
-          animation_key: string
-          cooldown_seconds: number
-          g_dollar_value: number
-          icon_url: string | null
-          id: string
-          is_active: boolean
-          max_per_live: number | null
-          min_follower_count: number
-          name: string
-        }
-        Insert: {
-          animation_key: string
-          cooldown_seconds?: number
-          g_dollar_value: number
-          icon_url?: string | null
-          id: string
-          is_active?: boolean
-          max_per_live?: number | null
-          min_follower_count?: number
-          name: string
-        }
-        Update: {
-          animation_key?: string
-          cooldown_seconds?: number
-          g_dollar_value?: number
-          icon_url?: string | null
-          id?: string
-          is_active?: boolean
-          max_per_live?: number | null
-          min_follower_count?: number
-          name?: string
-        }
-        Relationships: []
-      }
-      likes: {
+      conversation_members: {
         Row: {
           conversation_id: string
           joined_at: string
@@ -387,6 +298,132 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      live_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_kicks: {
+        Row: {
+          created_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_kicks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_participants: {
+        Row: {
+          id: string
+          joined_at: string
+          left_at: string | null
+          role: string
+          session_id: string
+          slot: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          role?: string
+          session_id: string
+          slot: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          role?: string
+          session_id?: string
+          slot?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_sessions: {
+        Row: {
+          ended_at: string | null
+          host_id: string
+          id: string
+          like_count: number
+          started_at: string
+          status: string
+          title: string
+        }
+        Insert: {
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          like_count?: number
+          started_at?: string
+          status?: string
+          title?: string
+        }
+        Update: {
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          like_count?: number
+          started_at?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -719,6 +756,11 @@ export type Database = {
         Args: { _likes: number; _video_id: string; _views: number }
         Returns: undefined
       }
+      delete_live_chat_message: {
+        Args: { _message_id: string }
+        Returns: undefined
+      }
+      end_live: { Args: { _session_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -737,11 +779,30 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
-      register_view: { Args: { _video_id: string }; Returns: boolean }
-            send_gift: {
-        Args: { _gift_type_id: string; _recipient_id: string }
-        Returns: { animation_key: string; new_balance: number }[]
+      join_live: { Args: { _session_id: string }; Returns: number }
+      kick_participant: {
+        Args: { _session_id: string; _target: string }
+        Returns: undefined
       }
+      leave_live: { Args: { _session_id: string }; Returns: undefined }
+      like_live: { Args: { _session_id: string }; Returns: number }
+      register_view: { Args: { _video_id: string }; Returns: boolean }
+      send_gift: {
+        Args: {
+          _gift_type_id: string
+          _live_session_id?: string
+          _recipient_id: string
+        }
+        Returns: {
+          animation_key: string
+          new_balance: number
+        }[]
+      }
+      send_live_chat: {
+        Args: { _content: string; _session_id: string }
+        Returns: string
+      }
+      start_live: { Args: { _title: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
