@@ -1,11 +1,8 @@
 # Gallery — roadmap
 
-- [ ] Enable Cloud, email auth (auto-confirm), schema + storage + roles
-- [ ] Design system (white light mode, dark mode, rose brand, flower logo)
-- [ ] Auth (email/password sign up + login, username)
-- [ ] Feed (vertical video feed), like, comment, save, share (DM), report
-- [ ] Upload (file + in-app recording) with title, description, hashtags
-- [ ] Profiles, follow, saved/liked tabs
-- [ ] Group chats / DMs
-- [ ] Admin (PulaTare): delete any video, ban users (duration), remove comments
-- [ ] Theme toggle, head metadata
+- [x] Core account, feed, upload, profile, messaging, moderation, and theme foundation
+- [x] Step 1 editor/FYP foundations and upload editor connection
+- [ ] Step 2 profile swiper, Reposts profile tab, and group chat management
+- [ ] Live: enforce one active broadcast per creator
+- [ ] Live: reference-style guest grid, overlaid chat, gifts, likes, viewers, and host controls
+- [ ] Live: verify desktop and mobile behavior
