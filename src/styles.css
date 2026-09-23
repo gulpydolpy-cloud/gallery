@@ -190,3 +190,26 @@
 @utility animate-gift-burst {
   animation: gift-burst 1.4s ease-out forwards;
 }
+
+@keyframes gift-petal-fall {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--rotate)); opacity: 0; }
+}
+
+@keyframes gift-sparkle-pop {
+  0%, 100% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes gift-wild-burst {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); opacity: 0; }
+}
+
+@keyframes gift-galaxy-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.3); opacity: 0; }
+  15% { opacity: 1; }
+  70% { transform: translate(-50%, -50%) rotate(360deg) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(430deg) scale(1.1); opacity: 0; }
+}
