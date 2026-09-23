@@ -29,6 +29,7 @@ export function useLiveConnection({
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [source, setSource] = useState<"camera" | "screen">("camera");
+  const [presenceCount, setPresenceCount] = useState(1);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
@@ -140,6 +141,7 @@ export function useLiveConnection({
 
     ch.on("presence", { event: "sync" }, () => {
       const state = ch.presenceState();
+      setPresenceCount(Object.keys(state).length);
       for (const id of Object.keys(state).filter((k) => k !== userId)) {
         if (needsConnectionTo(id) && !peersRef.current.has(id)) void startOfferTo(id);
       }
@@ -202,5 +204,5 @@ export function useLiveConnection({
     }
   };
 
-  return { localStream, remoteStreams, micOn, cameraOn, source, toggleMic, toggleCamera, switchSource };
+  return { localStream, remoteStreams, micOn, cameraOn, source, toggleMic, toggleCamera, switchSource, presenceCount };
 }
