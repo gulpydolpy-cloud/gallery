@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { Radio } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Upload as UploadIcon, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -77,7 +78,12 @@ function UploadPage() {
 
   return (
     <div className="mx-auto max-w-4xl p-4">
-      <h1 className="mb-4 text-2xl font-extrabold">Upload video</h1>
+            <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-extrabold">Upload video</h1>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/live"><Radio className="size-4" /> Go Live instead</Link>
+        </Button>
+      </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div>
           {file ? (
