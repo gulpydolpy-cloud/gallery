@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, Gift as GiftIcon, Heart, Mic, MicOff, Monitor, Radio, Video, VideoOff, X } from "lucide-react";
+import { Eye, Gift as GiftIcon, Heart, Mic, MicOff, MonitorUp, Radio, RotateCcw, Video, VideoOff, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,16 @@ import { useGiftTypes } from "@/lib/gifts";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/live/$id")({
+  head: () => ({
+    meta: [
+      { title: "Live broadcast — Gallery" },
+      { name: "description", content: "Watch and join a live creator broadcast on Gallery." },
+      { property: "og:title", content: "Live broadcast — Gallery" },
+      { property: "og:description", content: "Watch and join a live creator broadcast on Gallery." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: LiveRoomPage,
 });
 
@@ -31,7 +41,9 @@ function LiveRoomPage() {
   const [liveGiftEffect, setLiveGiftEffect] = useState<string | null>(null);
   const [lastGiftLine, setLastGiftLine] = useState<string | null>(null);
   const [hearts, setHearts] = useState<FloatingHeart[]>([]);
+  const [displayedLikes, setDisplayedLikes] = useState(0);
   const heartIdRef = useRef(0);
+  const lastTapRef = useRef(0);
 
   const isHost = Boolean(user && session && session.host_id === user.id);
   const myParticipant = participants.find((p) => p.user_id === user?.id);
@@ -54,6 +66,10 @@ function LiveRoomPage() {
     gridMemberIds,
   });
 
+  useEffect(() => {
+    if (session) setDisplayedLikes(session.like_count);
+  }, [session]);
+
   // Gift animations + ticker line, driven by realtime so everyone in the room sees them.
   useEffect(() => {
     if (!giftTypes.length) return;
@@ -73,12 +89,23 @@ function LiveRoomPage() {
     return () => void supabase.removeChannel(ch);
   }, [id, giftTypes]);
 
-  const handleDoubleTapLike = () => {
+  const addLike = () => {
     if (!user) return;
     const heartId = heartIdRef.current++;
     setHearts((prev) => [...prev, { id: heartId, left: 40 + Math.random() * 20 }]);
     setTimeout(() => setHearts((prev) => prev.filter((h) => h.id !== heartId)), 1400);
-    likeLive(id).catch(() => {});
+    setDisplayedLikes((count) => count + 1);
+    likeLive(id).then(setDisplayedLikes).catch(() => setDisplayedLikes((count) => Math.max(0, count - 1)));
+  };
+
+  const handlePointerUp = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 320) {
+      addLike();
+      lastTapRef.current = 0;
+      return;
+    }
+    lastTapRef.current = now;
   };
 
   if (!session) return <div className="p-10 text-center text-muted-foreground">Loading live…</div>;
@@ -123,19 +150,22 @@ function LiveRoomPage() {
   };
 
   return (
-    <div className="relative flex h-[100dvh] flex-col bg-black text-white">
+    <div className="relative mx-auto flex h-[calc(100dvh-7rem)] min-h-[560px] w-full max-w-6xl flex-col overflow-hidden bg-video-bg text-on-video md:h-screen md:min-h-0">
       {/* Header */}
-      <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-2 bg-gradient-to-b from-black/80 to-transparent p-3">
+      <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-2 bg-video-bg/75 p-3 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-2">
           {hostProfile && <UserAvatar profile={hostProfile} size="sm" />}
           <div className="min-w-0">
             <p className="truncate text-sm font-bold leading-tight">{hostProfile?.display_name || hostProfile?.username}</p>
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose px-1.5 py-[1px] text-[9px] font-extrabold">LIVE</span>
+            <p className="truncate text-[11px] text-on-video/65">@{hostProfile?.username}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span className="flex items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-xs font-semibold">
             <Eye className="size-3.5" /> {conn.presenceCount}
+          </span>
+          <span className="hidden items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-xs font-semibold sm:flex">
+            <Heart className="size-3.5 fill-rose text-rose" /> {displayedLikes}
           </span>
           {hostProfile && session.host_id !== user?.id && (
             <GiftPanel
@@ -143,42 +173,42 @@ function LiveRoomPage() {
               recipientName={hostProfile.display_name || hostProfile.username}
               liveSessionId={id}
               trigger={
-                <button className="rounded-full bg-black/40 p-1.5" aria-label="Send gift">
+                <Button type="button" variant="video" size="icon" className="size-8 bg-black/40" aria-label="Send gift">
                   <GiftIcon className="size-4" />
-                </button>
+                </Button>
               }
             />
           )}
           {!isGridMember && (
-            <button onClick={() => navigate({ to: "/live" })} className="rounded-full bg-black/40 p-1.5" aria-label="Close">
+            <Button type="button" variant="video" size="icon" onClick={() => navigate({ to: "/live" })} className="size-8 bg-black/40" aria-label="Close">
               <X className="size-4" />
-            </button>
+            </Button>
           )}
         </div>
       </header>
 
       {/* Video area: main host tile + guest grid, double-tap anywhere to like */}
-      <div className="relative flex-1 overflow-hidden" onDoubleClick={handleDoubleTapLike}>
-        <div className="flex h-full gap-1 p-1 pt-16">
-          <div className="relative w-2/3 overflow-hidden rounded-lg bg-neutral-900">
-            {host && <VideoTile stream={host.user_id === user?.id ? conn.localStream : conn.remoteStreams[host.user_id]} muted={host.user_id === user?.id} />}
+      <div className="relative flex-1 overflow-hidden touch-manipulation" onPointerUp={handlePointerUp}>
+        <div className="grid h-full grid-cols-3 grid-rows-4 gap-1 p-1 pt-16 pb-44 sm:grid-cols-4 sm:grid-rows-3 sm:pb-48">
+          <div className="relative col-span-2 row-span-3 overflow-hidden rounded-md bg-secondary sm:row-span-3">
+            {host && <VideoTile stream={host.user_id === user?.id ? conn.localStream : conn.remoteStreams[host.user_id]} muted={host.user_id === user?.id} profile={host.profile} cameraOn={host.user_id !== user?.id || conn.cameraOn} />}
             <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-xs font-semibold">
               <Radio className="size-3 text-rose" /> {host?.profile?.username ?? "Host"}
             </span>
           </div>
-          <div className="flex w-1/3 flex-col gap-1 overflow-y-auto">
-            {guests.map((g) => (
-              <div key={g.id} className="relative aspect-square shrink-0 overflow-hidden rounded-lg bg-neutral-900">
-                <VideoTile stream={g.user_id === user?.id ? conn.localStream : conn.remoteStreams[g.user_id]} muted={g.user_id === user?.id} />
-                <span className="absolute bottom-0.5 left-0.5 truncate rounded-full bg-black/50 px-1.5 py-[1px] text-[9px] font-semibold">{g.profile?.username}</span>
-                {isHost && (
-                  <button onClick={() => kick(g.user_id)} className="absolute top-0.5 right-0.5 rounded-full bg-black/60 p-0.5" aria-label={`Remove ${g.profile?.username}`}>
+          {Array.from({ length: 8 }, (_, index) => guests[index]).map((guest, index) => (
+              <div key={guest?.id ?? `empty-${index}`} className="relative min-h-0 overflow-hidden rounded-md bg-secondary">
+                {guest ? <VideoTile stream={guest.user_id === user?.id ? conn.localStream : conn.remoteStreams[guest.user_id]} muted={guest.user_id === user?.id} profile={guest.profile} cameraOn={guest.user_id !== user?.id || conn.cameraOn} /> : <div className="flex size-full items-center justify-center text-on-video/20"><UserAvatarPlaceholder /></div>}
+                {guest && (
+                  <span className="absolute inset-x-1 bottom-1 truncate text-[9px] font-semibold text-shadow-video">{guest.profile?.username}</span>
+                )}
+                {isHost && guest && (
+                  <Button type="button" variant="video" size="icon" onClick={() => kick(guest.user_id)} className="absolute right-0.5 top-0.5 size-6 bg-black/60" aria-label={`Remove ${guest.profile?.username}`}>
                     <X className="size-3" />
-                  </button>
+                  </Button>
                 )}
               </div>
             ))}
-          </div>
         </div>
 
         {hearts.map((h) => (
@@ -186,19 +216,18 @@ function LiveRoomPage() {
         ))}
       </div>
 
-      {/* Gift ticker */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-14 z-20 bg-gradient-to-t from-video-bg via-video-bg/75 to-transparent pt-12">
       {lastGiftLine && (
-        <p className="bg-black/60 px-3 py-1 text-xs font-medium text-white/90">🎁 {lastGiftLine}</p>
+        <p className="mx-3 mb-1 w-fit max-w-[85%] rounded-full bg-rose/90 px-3 py-1 text-xs font-semibold text-rose-foreground">🎁 {lastGiftLine}</p>
       )}
-
-      {/* Chat */}
-      <div className="max-h-[32vh] border-t border-white/10">
+      <div className="pointer-events-auto h-32 sm:h-36">
         <LiveChat sessionId={id} canModerate={isHost} />
+      </div>
       </div>
 
       {/* Join CTA for viewers who want to hop into the grid */}
       {!isGridMember && user && (
-        <div className="p-2">
+        <div className="absolute inset-x-0 bottom-2 z-30 px-3">
           <Button variant="rose" className="w-full" disabled={joining} onClick={join}>
             {joining ? "Joining…" : "Join as a guest"}
           </Button>
@@ -207,11 +236,11 @@ function LiveRoomPage() {
 
       {/* Bottom control bar for host/guests */}
       {isGridMember && (
-        <div className="flex items-center justify-center gap-3 border-t border-white/10 p-2">
-          <Button variant="secondary" size="icon" onClick={conn.toggleMic}>
+        <div className="absolute inset-x-0 bottom-0 z-30 flex h-14 items-center justify-center gap-2 border-t border-on-video/10 bg-video-bg/90 px-2 backdrop-blur-sm">
+          <Button variant="secondary" size="icon" onClick={conn.toggleMic} aria-label={conn.micOn ? "Mute microphone" : "Turn on microphone"}>
             {conn.micOn ? <Mic className="size-4" /> : <MicOff className="size-4" />}
           </Button>
-          <Button variant="secondary" size="icon" onClick={conn.toggleCamera}>
+          <Button variant="secondary" size="icon" onClick={conn.toggleCamera} aria-label={conn.cameraOn ? "Turn off camera" : "Turn on camera"}>
             {conn.cameraOn ? <Video className="size-4" /> : <VideoOff className="size-4" />}
           </Button>
           {!isHost && (
@@ -219,8 +248,9 @@ function LiveRoomPage() {
           )}
           {isHost && (
             <>
-              <Button variant="secondary" size="icon" onClick={() => conn.switchSource(conn.source === "camera" ? "screen" : "camera")} aria-label="Switch camera/screen share">
-                <Monitor className="size-4" />
+              <Button variant="secondary" size="sm" onClick={() => conn.switchSource(conn.source === "camera" ? "screen" : "camera")} aria-label="Switch camera or screen share">
+                {conn.source === "camera" ? <MonitorUp className="size-4" /> : <RotateCcw className="size-4" />}
+                <span className="hidden sm:inline">{conn.source === "camera" ? "Share screen" : "Camera"}</span>
               </Button>
               <Button variant="destructive" size="sm" onClick={end}>End Live</Button>
             </>
@@ -233,16 +263,23 @@ function LiveRoomPage() {
   );
 }
 
-function VideoTile({ stream, muted }: { stream: MediaStream | null | undefined; muted: boolean }) {
+function UserAvatarPlaceholder() {
+  return <VideoOff className="size-7" />;
+}
+
+function VideoTile({ stream, muted, profile, cameraOn }: { stream: MediaStream | null | undefined; muted: boolean; profile?: { username: string; display_name?: string | null; avatar_path?: string | null }; cameraOn: boolean }) {
   return (
-    <video
-      ref={(el) => {
-        if (el && stream) el.srcObject = stream;
-      }}
-      autoPlay
-      playsInline
-      muted={muted}
-      className="size-full object-cover"
-    />
+    <>
+      {(!stream || !cameraOn) && profile && <div className="absolute inset-0 flex items-center justify-center"><UserAvatar profile={profile} size="lg" /></div>}
+      <video
+        ref={(el) => {
+          if (el) el.srcObject = stream ?? null;
+        }}
+        autoPlay
+        playsInline
+        muted={muted}
+        className="relative size-full object-cover"
+      />
+    </>
   );
 }

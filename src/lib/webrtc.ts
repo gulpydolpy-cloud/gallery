@@ -100,7 +100,10 @@ export function useLiveConnection({
         if (cancelled) return;
         localStreamRef.current = stream;
         setLocalStream(stream);
-        for (const pc of peersRef.current.values()) for (const track of stream.getTracks()) pc.addTrack(track, stream);
+        for (const [otherId, pc] of peersRef.current.entries()) {
+          for (const track of stream.getTracks()) pc.addTrack(track, stream);
+          void startOfferTo(otherId);
+        }
       })
       .catch(() => {
         /* camera/mic permission denied — can still watch/chat */
@@ -110,7 +113,7 @@ export function useLiveConnection({
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     };
-  }, [role]);
+  }, [role, startOfferTo]);
 
   useEffect(() => {
     const ch = supabase.channel(`live-rtc-${sessionId}`, { config: { presence: { key: userId } } });
@@ -160,8 +163,7 @@ export function useLiveConnection({
       for (const pc of peersRef.current.values()) pc.close();
       peersRef.current.clear();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, userId]);
+  }, [closePeer, ensurePeer, needsConnectionTo, role, sessionId, startOfferTo, userId]);
 
   const toggleMic = () => {
     const stream = localStreamRef.current;
@@ -181,7 +183,7 @@ export function useLiveConnection({
   const switchSource = async (next: "camera" | "screen") => {
     if (role !== "grid") return;
     try {
-      const media = next === "screen" ? await navigator.mediaDevices.getDisplayMedia({ video: true }) : await navigator.mediaDevices.getUserMedia({ video: true });
+       const media = next === "screen" ? await navigator.mediaDevices.getDisplayMedia({ video: true }) : await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       const newVideoTrack = media.getVideoTracks()[0];
       if (!newVideoTrack) return;
       const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
@@ -190,10 +192,14 @@ export function useLiveConnection({
         if (sender) void sender.replaceTrack(newVideoTrack);
       }
       oldVideoTrack?.stop();
-      if (localStreamRef.current) {
+       if (localStreamRef.current) {
         if (oldVideoTrack) localStreamRef.current.removeTrack(oldVideoTrack);
         localStreamRef.current.addTrack(newVideoTrack);
         setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+       } else {
+         const nextStream = new MediaStream([newVideoTrack]);
+         localStreamRef.current = nextStream;
+         setLocalStream(nextStream);
       }
       setSource(next);
       newVideoTrack.onended = () => {

@@ -40,21 +40,24 @@ export function LiveChat({ sessionId, canModerate }: { sessionId: string; canMod
               {m.content}
             </p>
             {(canModerate || m.user_id === user?.id) && (
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => deleteLiveChatMessage(m.id).catch((err) => toast.error((err as Error).message))}
-                className="opacity-0 transition-opacity group-hover:opacity-100"
+                className="size-7 shrink-0 text-on-video opacity-0 transition-opacity hover:bg-on-video/10 group-hover:opacity-100"
                 aria-label="Delete message"
               >
-                <Trash2 className="size-3.5 text-white/70" />
-              </button>
+                <Trash2 className="size-3.5 opacity-70" />
+              </Button>
             )}
           </div>
         ))}
         <div ref={bottom} />
       </div>
       {user && (
-        <form onSubmit={send} className="flex gap-2 p-2">
-          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Say something…" className="h-9 border-white/20 bg-black/30 text-white placeholder:text-white/50" />
+        <form onSubmit={send} className="flex gap-2 px-3 pb-3 pt-1">
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Say something…" className="h-10 rounded-full border-on-video/20 bg-video-bg/55 px-4 text-on-video placeholder:text-on-video/55" />
           <Button type="submit" size="icon" className="h-9 w-9 shrink-0" variant="rose">
             <Send className="size-4" />
           </Button>
