@@ -18,10 +18,12 @@ export function GiftPanel({
   recipientId,
   recipientName,
   liveSessionId,
+  trigger,
 }: {
   recipientId: string;
   recipientName: string;
   liveSessionId?: string;
+  trigger?: React.ReactNode;
 }) {
   const { user } = useAuth();
   const { data: gifts = [] } = useGiftTypes();
@@ -48,9 +50,11 @@ export function GiftPanel({
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline">
-            <GiftIcon /> Send Gift
-          </Button>
+          {trigger ?? (
+            <Button variant="outline">
+              <GiftIcon /> Send Gift
+            </Button>
+          )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
