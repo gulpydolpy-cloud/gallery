@@ -7,7 +7,15 @@ const db = supabase as unknown as {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
 };
 
-export type LiveSession = { id: string; host_id: string; title: string; status: "live" | "ended"; started_at: string; ended_at: string | null };
+export type LiveSession = {
+  id: string;
+  host_id: string;
+  title: string;
+  status: "live" | "ended";
+  started_at: string;
+  ended_at: string | null;
+  like_count: number;
+};
 export type LiveParticipant = { id: string; session_id: string; user_id: string; role: "host" | "guest"; slot: number; joined_at: string; left_at: string | null };
 export type LiveChatMessage = { id: string; session_id: string; user_id: string; content: string; created_at: string };
 
@@ -41,7 +49,7 @@ export function useLiveSession(sessionId: string) {
   return useQuery({
     queryKey: ["live-session", sessionId],
     queryFn: async () => (await db.from("live_sessions").select("*").eq("id", sessionId).maybeSingle()).data as LiveSession | null,
-    refetchInterval: 5000,
+    refetchInterval: 4000,
   });
 }
 
@@ -89,6 +97,11 @@ export async function kickParticipant(sessionId: string, targetUserId: string) {
 export async function endLive(sessionId: string) {
   const { error } = await db.rpc("end_live", { _session_id: sessionId });
   if (error) throw new Error((error as Error).message);
+}
+export async function likeLive(sessionId: string): Promise<number> {
+  const { data, error } = await db.rpc("like_live", { _session_id: sessionId });
+  if (error) throw new Error((error as Error).message);
+  return data as number;
 }
 
 export function useLiveChat(sessionId: string) {
