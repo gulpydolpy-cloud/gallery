@@ -3,6 +3,7 @@ import { Gift as GiftIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { GiftEffectOverlay } from "@/components/GiftEffectOverlay";
 import { useAuth } from "@/lib/auth";
 import { useGiftTypes, sendGift, type GiftType } from "@/lib/gifts";
 
@@ -13,20 +14,29 @@ const GIFT_STYLE: Record<string, { emoji: string; glow: string }> = {
   galaxy_explosion: { emoji: "🌌", glow: "text-purple-400" },
 };
 
-export function GiftPanel({ recipientId, recipientName }: { recipientId: string; recipientName: string }) {
+export function GiftPanel({
+  recipientId,
+  recipientName,
+  liveSessionId,
+}: {
+  recipientId: string;
+  recipientName: string;
+  liveSessionId?: string;
+}) {
   const { user } = useAuth();
   const { data: gifts = [] } = useGiftTypes();
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
-  const [burst, setBurst] = useState<{ key: string; id: number } | null>(null);
+  const [activeEffect, setActiveEffect] = useState<string | null>(null);
 
   const send = async (gift: GiftType) => {
     if (!user) return toast.error("Log in to send gifts");
     setSending(gift.id);
     try {
-      const result = await sendGift(gift.id, recipientId);
-      setBurst({ key: result.animation_key, id: Date.now() });
+      const result = await sendGift(gift.id, recipientId, liveSessionId);
+      setActiveEffect(result.animation_key);
       toast.success(`Sent ${gift.name}! ${recipientName} just got G$${gift.g_dollar_value}.`);
+      setOpen(false);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -70,13 +80,7 @@ export function GiftPanel({ recipientId, recipientName }: { recipientId: string;
         </DialogContent>
       </Dialog>
 
-      {burst && (
-        <div key={burst.id} className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center">
-          <span className="animate-gift-burst text-6xl" onAnimationEnd={() => setBurst(null)}>
-            {GIFT_STYLE[burst.key]?.emoji ?? "🎁"}
-          </span>
-        </div>
-      )}
+      {activeEffect && <GiftEffectOverlay animationKey={activeEffect} onDone={() => setActiveEffect(null)} />}
     </>
   );
 }
