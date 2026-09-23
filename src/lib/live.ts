@@ -25,7 +25,13 @@ export function useLiveSessions() {
     queryFn: async () => {
       const { data, error } = await db.from("live_sessions").select("*").eq("status", "live").order("started_at", { ascending: false });
       if (error) throw error;
-      const rows = (data ?? []) as LiveSession[];
+      const rawRows = (data ?? []) as LiveSession[];
+      const seenHosts = new Set<string>();
+      const rows = rawRows.filter((row) => {
+        if (seenHosts.has(row.host_id)) return false;
+        seenHosts.add(row.host_id);
+        return true;
+      });
       if (!rows.length) return [];
       const hostIds = rows.map((r) => r.host_id);
       const { data: hosts } = await supabase.from("profiles").select("id, username, display_name, avatar_path").in("id", hostIds);

@@ -14,10 +14,12 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FollowingRouteImport } from './routes/following'
+import { Route as LiveRouteImport } from './routes/live'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
+import { Route as LiveIdRouteImport } from './routes/live.$id'
 import { Route as TagTagRouteImport } from './routes/tag.$tag'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as VideoIdRouteImport } from './routes/video.$id'
@@ -47,6 +49,11 @@ const FollowingRoute = FollowingRouteImport.update({
   path: '/following',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -66,6 +73,11 @@ const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
   id: '/upload',
   path: '/upload',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const LiveIdRoute = LiveIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => LiveRoute,
 } as any)
 const TagTagRoute = TagTagRouteImport.update({
   id: '/tag/$tag',
@@ -93,10 +105,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/explore': typeof ExploreRoute
   '/following': typeof FollowingRoute
+  '/live': typeof LiveRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/upload': typeof AuthenticatedUploadRoute
+  '/live/$id': typeof LiveIdRoute
   '/tag/$tag': typeof TagTagRoute
   '/u/$username': typeof UUsernameRoute
   '/video/$id': typeof VideoIdRoute
@@ -107,10 +121,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/explore': typeof ExploreRoute
   '/following': typeof FollowingRoute
+  '/live': typeof LiveRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/upload': typeof AuthenticatedUploadRoute
+  '/live/$id': typeof LiveIdRoute
   '/tag/$tag': typeof TagTagRoute
   '/u/$username': typeof UUsernameRoute
   '/video/$id': typeof VideoIdRoute
@@ -123,10 +139,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/explore': typeof ExploreRoute
   '/following': typeof FollowingRoute
+  '/live': typeof LiveRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRoute
+  '/live/$id': typeof LiveIdRoute
   '/tag/$tag': typeof TagTagRoute
   '/u/$username': typeof UUsernameRoute
   '/video/$id': typeof VideoIdRoute
@@ -139,10 +157,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/explore'
     | '/following'
+    | '/live'
     | '/admin'
     | '/inbox'
     | '/settings'
     | '/upload'
+    | '/live/$id'
     | '/tag/$tag'
     | '/u/$username'
     | '/video/$id'
@@ -153,10 +173,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/explore'
     | '/following'
+    | '/live'
     | '/admin'
     | '/inbox'
     | '/settings'
     | '/upload'
+    | '/live/$id'
     | '/tag/$tag'
     | '/u/$username'
     | '/video/$id'
@@ -168,10 +190,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/explore'
     | '/following'
+    | '/live'
     | '/_authenticated/admin'
     | '/_authenticated/inbox'
     | '/_authenticated/settings'
     | '/_authenticated/upload'
+    | '/live/$id'
     | '/tag/$tag'
     | '/u/$username'
     | '/video/$id'
@@ -184,6 +208,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ExploreRoute: typeof ExploreRoute
   FollowingRoute: typeof FollowingRoute
+  LiveRoute: typeof LiveRouteWithChildren
   TagTagRoute: typeof TagTagRoute
   UUsernameRoute: typeof UUsernameRoute
   VideoIdRoute: typeof VideoIdRoute
@@ -226,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FollowingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/live': {
+      id: '/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof LiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -253,6 +285,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/upload'
       preLoaderRoute: typeof AuthenticatedUploadRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/live/$id': {
+      id: '/live/$id'
+      path: '/$id'
+      fullPath: '/live/$id'
+      preLoaderRoute: typeof LiveIdRouteImport
+      parentRoute: typeof LiveRoute
     }
     '/tag/$tag': {
       id: '/tag/$tag'
@@ -313,12 +352,23 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface LiveRouteChildren {
+  LiveIdRoute: typeof LiveIdRoute
+}
+
+const LiveRouteChildren: LiveRouteChildren = {
+  LiveIdRoute: LiveIdRoute,
+}
+
+const LiveRouteWithChildren = LiveRoute._addFileChildren(LiveRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ExploreRoute: ExploreRoute,
   FollowingRoute: FollowingRoute,
+  LiveRoute: LiveRouteWithChildren,
   TagTagRoute: TagTagRoute,
   UUsernameRoute: UUsernameRoute,
   VideoIdRoute: VideoIdRoute,

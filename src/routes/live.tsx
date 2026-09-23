@@ -10,6 +10,16 @@ import { useAuth } from "@/lib/auth";
 import { startLive, useLiveSessions } from "@/lib/live";
 
 export const Route = createFileRoute("/live")({
+  head: () => ({
+    meta: [
+      { title: "Live on Gallery" },
+      { name: "description", content: "Watch creators and guests broadcasting live on Gallery." },
+      { property: "og:title", content: "Live on Gallery" },
+      { property: "og:description", content: "Watch creators and guests broadcasting live on Gallery." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: LivePage,
 });
 
@@ -20,6 +30,7 @@ function LivePage() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [starting, setStarting] = useState(false);
+  const myLive = user ? sessions.find((session) => session.host_id === user.id) : undefined;
 
   const goLive = async () => {
     if (!user) return navigate({ to: "/auth" });
@@ -39,8 +50,21 @@ function LivePage() {
     <div className="mx-auto max-w-4xl p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-extrabold">Live</h1>
-        <Button variant="rose" onClick={() => (user ? setOpen(true) : navigate({ to: "/auth" }))}>
-          <Radio /> Go Live
+        <Button
+          variant="rose"
+          onClick={() => {
+            if (!user) {
+              navigate({ to: "/auth" });
+              return;
+            }
+            if (myLive) {
+              navigate({ to: "/live/$id", params: { id: myLive.id } });
+              return;
+            }
+            setOpen(true);
+          }}
+        >
+          <Radio /> {myLive ? "Return to Live" : "Go Live"}
         </Button>
       </div>
 
