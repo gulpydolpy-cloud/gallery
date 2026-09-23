@@ -1,6 +1,6 @@
 # Gallery
 
-i want a @connector:tiktok:"TikTok" alternative APP that has the same features, same EXACT features, you can make an account, though if i log in to the account PulaTare with the password parola789, then you can have the ability to delete any video by any person, ban people for any reason for any ammount of time and other stuff, you can also make an account with ur email/phone number, you can also upload videos, SAME EXACT THING, make dark/light mode, i want light mode to be plain white, not beige, i want it to be simple, i want it to be called "Gallery" with a flower symbol and in rose text *on dark mode it is whiet text, you can also comment, like, save videos, share videos to anyone on the app, report videos, make a groupchat, i want it to be the same. also, make it so u can upload videos with a title, description, hashtags, or just record videos IN APP.
+yes
 
 This project was built with [Lovable](https://lovable.dev).
 
