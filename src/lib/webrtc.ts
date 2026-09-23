@@ -46,7 +46,11 @@ export function useLiveConnection({
       pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
       peersRef.current.set(otherId, pc);
       if (localStreamRef.current) for (const track of localStreamRef.current.getTracks()) pc.addTrack(track, localStreamRef.current);
-      pc.ontrack = (e) => setRemoteStreams((prev) => ({ ...prev, [otherId]: e.streams[0] }));
+       pc.ontrack = (event) => {
+         const stream = event.streams[0];
+         if (!stream) return;
+         setRemoteStreams((prev) => ({ ...prev, [otherId]: stream }));
+       };
       pc.onicecandidate = (e) => {
         if (e.candidate) {
           channelRef.current?.send({

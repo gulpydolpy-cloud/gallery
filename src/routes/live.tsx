@@ -53,8 +53,14 @@ function LivePage() {
         <Button
           variant="rose"
           onClick={() => {
-            if (!user) return navigate({ to: "/auth" });
-            if (myLive) return navigate({ to: "/live/$id", params: { id: myLive.id } });
+            if (!user) {
+              navigate({ to: "/auth" });
+              return;
+            }
+            if (myLive) {
+              navigate({ to: "/live/$id", params: { id: myLive.id } });
+              return;
+            }
             setOpen(true);
           }}
         >

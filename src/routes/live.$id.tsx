@@ -164,6 +164,7 @@ function LiveRoomPage() {
           <span className="flex items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-xs font-semibold">
             <Eye className="size-3.5" /> {conn.presenceCount}
           </span>
+          <span className="rounded-full bg-rose px-2 py-1 text-[10px] font-extrabold text-rose-foreground">LIVE</span>
           <span className="hidden items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-xs font-semibold sm:flex">
             <Heart className="size-3.5 fill-rose text-rose" /> {displayedLikes}
           </span>
@@ -190,14 +191,14 @@ function LiveRoomPage() {
       {/* Video area: main host tile + guest grid, double-tap anywhere to like */}
       <div className="relative flex-1 overflow-hidden touch-manipulation" onPointerUp={handlePointerUp}>
         <div className="grid h-full grid-cols-3 grid-rows-4 gap-1 p-1 pt-16 pb-44 sm:grid-cols-4 sm:grid-rows-3 sm:pb-48">
-          <div className="relative col-span-2 row-span-3 overflow-hidden rounded-md bg-secondary sm:row-span-3">
+          <div className="relative col-span-2 row-span-2 overflow-hidden rounded-md bg-secondary sm:row-span-3">
             {host && <VideoTile stream={host.user_id === user?.id ? conn.localStream : conn.remoteStreams[host.user_id]} muted={host.user_id === user?.id} profile={host.profile} cameraOn={host.user_id !== user?.id || conn.cameraOn} />}
             <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-xs font-semibold">
               <Radio className="size-3 text-rose" /> {host?.profile?.username ?? "Host"}
             </span>
           </div>
           {Array.from({ length: 8 }, (_, index) => guests[index]).map((guest, index) => (
-              <div key={guest?.id ?? `empty-${index}`} className="relative min-h-0 overflow-hidden rounded-md bg-secondary">
+              <div key={guest?.id ?? `empty-${index}`} className={`relative min-h-0 overflow-hidden rounded-md bg-secondary ${index >= 6 ? "sm:hidden" : ""}`}>
                 {guest ? <VideoTile stream={guest.user_id === user?.id ? conn.localStream : conn.remoteStreams[guest.user_id]} muted={guest.user_id === user?.id} profile={guest.profile} cameraOn={guest.user_id !== user?.id || conn.cameraOn} /> : <div className="flex size-full items-center justify-center text-on-video/20"><UserAvatarPlaceholder /></div>}
                 {guest && (
                   <span className="absolute inset-x-1 bottom-1 truncate text-[9px] font-semibold text-shadow-video">{guest.profile?.username}</span>
@@ -267,7 +268,7 @@ function UserAvatarPlaceholder() {
   return <VideoOff className="size-7" />;
 }
 
-function VideoTile({ stream, muted, profile, cameraOn }: { stream: MediaStream | null | undefined; muted: boolean; profile?: { username: string; display_name?: string | null; avatar_path?: string | null }; cameraOn: boolean }) {
+function VideoTile({ stream, muted, profile, cameraOn }: { stream: MediaStream | null | undefined; muted: boolean; profile: { username: string; display_name?: string | null; avatar_path?: string | null } | undefined; cameraOn: boolean }) {
   return (
     <>
       {(!stream || !cameraOn) && profile && <div className="absolute inset-0 flex items-center justify-center"><UserAvatar profile={profile} size="lg" /></div>}
@@ -278,7 +279,7 @@ function VideoTile({ stream, muted, profile, cameraOn }: { stream: MediaStream |
         autoPlay
         playsInline
         muted={muted}
-        className="relative size-full object-cover"
+        className={`relative size-full object-cover ${cameraOn ? "opacity-100" : "opacity-0"}`}
       />
     </>
   );

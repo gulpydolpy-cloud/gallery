@@ -32,7 +32,10 @@ export function GiftPanel({
   const [activeEffect, setActiveEffect] = useState<string | null>(null);
 
   const send = async (gift: GiftType) => {
-    if (!user) return toast.error("Log in to send gifts");
+    if (!user) {
+      toast.error("Log in to send gifts");
+      return;
+    }
     setSending(gift.id);
     try {
       const result = await sendGift(gift.id, recipientId, liveSessionId);
