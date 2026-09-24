@@ -19,7 +19,7 @@ function LiveRoomPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   return (
-    <div className="fixed inset-0 z-40 bg-video-bg">
+    <div className="relative h-[calc(100dvh-7rem)] min-h-[560px] w-full bg-video-bg md:h-screen md:min-h-0">
       <LiveRoomView sessionId={id} active onClose={() => navigate({ to: "/live" })} />
     </div>
   );
