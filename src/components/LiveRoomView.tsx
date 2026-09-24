@@ -170,19 +170,15 @@ export function LiveRoomView({
           >
             <Heart className="size-3.5 fill-rose text-rose" /> {displayedLikes}
           </button>
-          {headerExtra}
-          {hostProfile && session.host_id !== user?.id && (
-            <GiftPanel
-              recipientId={session.host_id}
-              recipientName={hostProfile.display_name || hostProfile.username}
-              liveSessionId={sessionId}
-              trigger={
-                <Button type="button" variant="video" size="icon" className="size-8 bg-black/40" aria-label="Send gift">
-                  <GiftIcon className="size-4" />
-                </Button>
-              }
-            />
-          )}
+                  {headerExtra}
+          <GiftPanel
+            liveSessionId={sessionId}
+            trigger={
+              <Button type="button" variant="video" size="icon" className="size-8 bg-black/40" aria-label="Send gift">
+                <GiftIcon className="size-4" />
+              </Button>
+            }
+          />
           {onClose && !isGridMember && (
             <Button type="button" variant="video" size="icon" onClick={onClose} className="size-8 bg-black/40" aria-label="Close">
               <X className="size-4" />
