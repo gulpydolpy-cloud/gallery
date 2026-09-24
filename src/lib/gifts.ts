@@ -34,6 +34,15 @@ export function useGiftTypes() {
   });
 }
 
+/** Sends a gift inside a live — G$ is split across everyone currently on screen (host + guests). */
+export async function sendLiveGift(sessionId: string, giftTypeId: string) {
+  const { data, error } = await db.rpc("send_live_gift", { _session_id: sessionId, _gift_type_id: giftTypeId });
+  if (error) throw new Error((error as Error).message ?? "Could not send gift");
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error("No response from server");
+  return row as { animation_key: string; recipient_count: number };
+}
+
 export async function sendGift(giftTypeId: string, recipientId: string, liveSessionId?: string | null) {
   const { data, error } = await db.rpc("send_gift", {
     _gift_type_id: giftTypeId,
