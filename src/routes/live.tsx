@@ -44,6 +44,12 @@ function LivePage() {
     return () => obs.disconnect();
   }, [sessions.length]);
 
+  const goLiveClick = () => {
+    if (!user) return navigate({ to: "/auth" });
+    if (myLive) return navigate({ to: "/live/$id", params: { id: myLive.id } });
+    setOpen(true);
+  };
+
   const goLive = async () => {
     if (!user) return navigate({ to: "/auth" });
     setStarting(true);
@@ -58,34 +64,27 @@ function LivePage() {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-30 bg-video-bg">
-      <div className="absolute bottom-40 right-3 z-40">
-        <Button
-          variant="rose"
-          size="sm"
-          onClick={() => {
-            if (!user) return navigate({ to: "/auth" });
-            if (myLive) return navigate({ to: "/live/$id", params: { id: myLive.id } });
-            setOpen(true);
-          }}
-        >
-          <Radio className="size-4" /> {myLive ? "Return to Live" : "Go Live"}
-        </Button>
-      </div>
+  const goLiveButton = (
+    <Button variant="rose" size="sm" className="h-7 px-2 text-xs" onClick={goLiveClick}>
+      <Radio className="size-3.5" /> {myLive ? "Return" : "Go Live"}
+    </Button>
+  );
 
+  return (
+    <div className="relative h-[calc(100dvh-7rem)] min-h-[560px] w-full bg-video-bg md:h-screen md:min-h-0">
       {isLoading ? (
         <div className="flex h-full items-center justify-center text-on-video/60">Loading…</div>
       ) : sessions.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-on-video">
           <p className="text-lg font-semibold">No one is live right now</p>
           <p className="text-sm text-on-video/60">Be the first to go live.</p>
+          <Button variant="rose" onClick={goLiveClick}><Radio className="size-4" /> Go Live</Button>
         </div>
       ) : (
         <div ref={container} className="snap-feed h-full overflow-y-auto">
           {sessions.map((s, i) => (
             <div key={s.id} data-index={i} className="snap-item h-full">
-              <LiveRoomView sessionId={s.id} active={i === active} />
+              <LiveRoomView sessionId={s.id} active={i === active} headerExtra={goLiveButton} />
             </div>
           ))}
         </div>
