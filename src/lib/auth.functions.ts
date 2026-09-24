@@ -8,40 +8,40 @@ const schema = z.object({
   password: z.string().min(1).max(200),
 });
 
+function makeAnonClient() {
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
+  });
+}
+
 /**
  * Signs in with either an email or a username. The username -> email lookup
- * happens on the server so emails are never exposed to the browser; the
- * session is only returned when the password is correct.
+ * happens on the server, via a database function, so emails are never exposed
+ * to the browser; the session is only returned when the password is correct.
  */
 export const signInWithIdentifier = createServerFn({ method: "POST" })
   .inputValidator((input) => schema.parse(input))
   .handler(async ({ data }) => {
     let email = data.identifier;
+    const client = makeAnonClient();
+
     if (!email.includes("@")) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .ilike("username", data.identifier)
-        .maybeSingle();
-      if (!profile) return { error: "Invalid username or password" as const, session: null };
-      const { data: u } = await supabaseAdmin.auth.admin.getUserById(profile.id);
-      if (!u.user?.email) return { error: "Invalid username or password" as const, session: null };
-      email = u.user.email;
+      const { data: lookedUp, error: lookupError } = await client.rpc("get_email_for_username", {
+        _username: data.identifier,
+      });
+      if (lookupError || !lookedUp) return { error: "Invalid username or password" as const, session: null };
+      email = lookedUp as string;
     }
 
-    const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-    const client = createClient<Database>(process.env["SUPABASE_URL"]!, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: {
-        fetch: (input, init) => {
-          const h = new Headers(init?.headers);
-          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-          h.set("apikey", key);
-          return fetch(input, { ...init, headers: h });
-        },
-      },
-    });
     const { data: signIn, error } = await client.auth.signInWithPassword({ email, password: data.password });
     if (error || !signIn.session) return { error: "Invalid username or password" as const, session: null };
     return {
