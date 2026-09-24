@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { GiftEffectOverlay } from "@/components/GiftEffectOverlay";
 import { useAuth } from "@/lib/auth";
-import { useGiftTypes, sendGift, type GiftType } from "@/lib/gifts";
+import { useGiftTypes, sendGift, sendLiveGift, type GiftType } from "@/lib/gifts";
 
 const GIFT_STYLE: Record<string, { emoji: string; glow: string }> = {
   rose_burst: { emoji: "🌹", glow: "text-rose" },
@@ -20,8 +20,8 @@ export function GiftPanel({
   liveSessionId,
   trigger,
 }: {
-  recipientId: string;
-  recipientName: string;
+  recipientId?: string;
+  recipientName?: string;
   liveSessionId?: string;
   trigger?: React.ReactNode;
 }) {
@@ -38,9 +38,15 @@ export function GiftPanel({
     }
     setSending(gift.id);
     try {
-      const result = await sendGift(gift.id, recipientId, liveSessionId);
-      setActiveEffect(result.animation_key);
-      toast.success(`Sent ${gift.name}! ${recipientName} just got G$${gift.g_dollar_value}.`);
+      if (liveSessionId) {
+        const result = await sendLiveGift(liveSessionId, gift.id);
+        setActiveEffect(result.animation_key);
+        toast.success(`Sent ${gift.name}! G$${gift.g_dollar_value} split across everyone on screen.`);
+      } else if (recipientId) {
+        const result = await sendGift(gift.id, recipientId);
+        setActiveEffect(result.animation_key);
+        toast.success(`Sent ${gift.name}! ${recipientName ?? "They"} just got G$${gift.g_dollar_value}.`);
+      }
       setOpen(false);
     } catch (err) {
       toast.error((err as Error).message);
@@ -61,7 +67,7 @@ export function GiftPanel({
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send a gift to {recipientName}</DialogTitle>
+            <DialogTitle>{liveSessionId ? "Send a gift" : `Send a gift to ${recipientName ?? ""}`}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {gifts.map((gift) => {
