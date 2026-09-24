@@ -9,14 +9,9 @@ import { useLiveChat, sendLiveChat, deleteLiveChatMessage } from "@/lib/live";
 
 export function LiveChat({ sessionId, canModerate }: { sessionId: string; canModerate: boolean }) {
   const { user } = useAuth();
-  const { data: messages = [] } = useLiveChat(sessionId);
+  const { data: allMessages = [] } = useLiveChat(sessionId);
+  const messages = allMessages.slice(-8);
   const [text, setText] = useState("");
-  const bottom = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
-
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || !user) return;
@@ -31,7 +26,7 @@ export function LiveChat({ sessionId, canModerate }: { sessionId: string; canMod
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 space-y-1.5 overflow-y-auto px-3 py-2">
+      <div className="flex-1 space-y-1.5 overflow-hidden px-3 py-2">
         {messages.map((m) => (
           <div key={m.id} className="group flex items-start gap-2 text-sm">
             {m.profile && <UserAvatar profile={m.profile} size="xs" />}
@@ -53,7 +48,6 @@ export function LiveChat({ sessionId, canModerate }: { sessionId: string; canMod
             )}
           </div>
         ))}
-        <div ref={bottom} />
       </div>
       {user && (
         <form onSubmit={send} className="flex gap-2 px-3 pb-3 pt-1">
