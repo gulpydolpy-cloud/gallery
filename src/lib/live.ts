@@ -92,6 +92,12 @@ export async function joinLive(sessionId: string): Promise<number> {
   if (error) throw new Error((error as Error).message ?? "Could not join");
   return data as number;
 }
+export async function addGuest(sessionId: string, targetUserId: string): Promise<number> {
+  const { data, error } = await db.rpc("add_guest", { _session_id: sessionId, _target: targetUserId });
+  if (error) throw new Error((error as Error).message);
+  return data as number;
+}
+
 export async function leaveLive(sessionId: string) {
   const { error } = await db.rpc("leave_live", { _session_id: sessionId });
   if (error) throw new Error((error as Error).message);
