@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { playGiftSound } from "@/lib/sounds";
 
 const DURATIONS: Record<string, number> = {
   rose_burst: 3200,
@@ -14,8 +15,10 @@ function rand(min: number, max: number) {
 export function GiftEffectOverlay({ animationKey, onDone }: { animationKey: string; onDone: () => void }) {
   const duration = DURATIONS[animationKey] ?? 3000;
   useEffect(() => {
+    playGiftSound(animationKey);
     const t = setTimeout(onDone, duration);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration, onDone]);
 
   return (
