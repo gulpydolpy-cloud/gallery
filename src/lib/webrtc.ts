@@ -17,12 +17,15 @@ export function useLiveConnection({
   userId,
   role,
   gridMemberIds,
+  enabled = true,
 }: {
   sessionId: string;
   userId: string;
   role: "grid" | "viewer";
   /** current set of grid-member (host+guest) user ids in the room */
   gridMemberIds: string[];
+  /** set false to skip connecting entirely (e.g. this slide isn't the one in view) */
+  enabled?: boolean;
 }) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
@@ -96,7 +99,7 @@ export function useLiveConnection({
   );
 
   useEffect(() => {
-    if (role !== "grid") return;
+    if (!enabled || role !== "grid") return;
     let cancelled = false;
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
@@ -117,9 +120,10 @@ export function useLiveConnection({
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     };
-  }, [role, startOfferTo]);
+  }, [role, startOfferTo, enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     const ch = supabase.channel(`live-rtc-${sessionId}`, { config: { presence: { key: userId } } });
     channelRef.current = ch;
 
@@ -167,7 +171,7 @@ export function useLiveConnection({
       for (const pc of peersRef.current.values()) pc.close();
       peersRef.current.clear();
     };
-  }, [closePeer, ensurePeer, needsConnectionTo, role, sessionId, startOfferTo, userId]);
+  }, [closePeer, ensurePeer, needsConnectionTo, role, sessionId, startOfferTo, userId, enabled]);
 
   const toggleMic = () => {
     const stream = localStreamRef.current;
