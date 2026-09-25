@@ -4,6 +4,8 @@ import { MessageCircle, Settings } from "lucide-react";
 import { useState } from "react";
 import { FollowButton } from "@/components/FollowButton";
 import { GiftPanel } from "@/components/GiftPanel";
+import { BadgeRow } from "@/components/BadgeRow";
+import { ManageBadgesDialog } from "@/components/ManageBadgesDialog";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VideoGrid } from "@/components/VideoGrid";
 import { BanDialog } from "@/components/BanDialog";
@@ -33,7 +35,8 @@ function ProfilePage() {
   const { username } = Route.useParams();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [ban, setBan] = useState(false);
+   const [ban, setBan] = useState(false);
+  const [manageBadges, setManageBadges] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", username],
@@ -73,12 +76,19 @@ function ProfilePage() {
       <div className="flex flex-col items-center gap-4 py-6 text-center sm:flex-row sm:items-start sm:text-left">
         <UserAvatar profile={profile} size="xl" />
         <div className="flex-1 space-y-3">
-                   <div>
-            <h1 className="text-2xl font-extrabold">{profile.display_name || profile.username}</h1>
+                           <div>
+            <h1 className="flex flex-wrap items-center justify-center gap-2 text-2xl font-extrabold sm:justify-start">
+              {profile.display_name || profile.username} <BadgeRow userId={profile.id} />
+            </h1>
             <p className="text-muted-foreground">@{profile.username}</p>
             <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold">
               💰 G$ {profile.wallet_balance}
             </p>
+            {isMe && (
+              <button type="button" onClick={() => setManageBadges(true)} className="mt-1 block text-xs font-semibold text-rose underline">
+                Manage badges
+              </button>
+            )}
           </div>
           <div className="flex justify-center gap-6 text-sm sm:justify-start">
             <Stat n={stats?.following ?? 0} label="Following" />
@@ -111,6 +121,7 @@ function ProfilePage() {
         {isMe && <TabsContent value="saved" className="pt-3"><VideoGrid videos={saved} empty="No saved videos" /></TabsContent>}
       </Tabs>
       {isAdmin && <BanDialog user={profile} open={ban} onOpenChange={setBan} />}
+      <ManageBadgesDialog userId={profile.id} open={manageBadges} onOpenChange={setManageBadges} />
     </div>
   );
 }
