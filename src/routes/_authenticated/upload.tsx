@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { parseHashtags } from "@/lib/media";
+import { checkAchievements } from "@/lib/achievements";
 
 export const Route = createFileRoute("/_authenticated/upload")({
   head: () => ({
@@ -66,8 +67,9 @@ function UploadPage() {
       const { error } = await supabase.from("videos").insert({ user_id: user.id, title: title.trim(), description: description.trim(), hashtags, storage_path: path, edit: JSON.parse(JSON.stringify(edit)) });
       if (error) throw error;
       setProgress(100);
-      toast.success("Your video is live!");
+        toast.success("Your video is live!");
       qc.invalidateQueries({ queryKey: ["feed"] });
+      void checkAchievements(user.id);
       navigate({ to: "/u/$username", params: { username: profile?.username ?? "" } });
     } catch (err) {
       toast.error((err as Error).message);
