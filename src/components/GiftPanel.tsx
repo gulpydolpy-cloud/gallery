@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { GiftEffectOverlay } from "@/components/GiftEffectOverlay";
 import { useAuth } from "@/lib/auth";
 import { useGiftTypes, sendGift, sendLiveGift, type GiftType } from "@/lib/gifts";
+import { checkAchievements } from "@/lib/achievements";
 
 const GIFT_STYLE: Record<string, { emoji: string; glow: string }> = {
   rose_burst: { emoji: "🌹", glow: "text-rose" },
@@ -47,14 +48,14 @@ export function GiftPanel({
         setActiveEffect(result.animation_key);
         toast.success(`Sent ${gift.name}! ${recipientName ?? "They"} just got G$${gift.g_dollar_value}.`);
       }
-      setOpen(false);
+       setOpen(false);
+      void checkAchievements(user.id);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
       setSending(null);
     }
   };
-
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
