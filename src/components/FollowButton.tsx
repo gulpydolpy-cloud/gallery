@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { checkAchievements } from "@/lib/achievements";
 
 export function FollowButton({ targetId, compact = false }: { targetId: string; compact?: boolean }) {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export function FollowButton({ targetId, compact = false }: { targetId: string; 
     else await supabase.from("follows").insert({ follower_id: user.id, following_id: targetId });
     qc.invalidateQueries({ queryKey: ["following", user.id, targetId] });
     qc.invalidateQueries({ queryKey: ["profile-stats", targetId] });
+    void checkAchievements(user.id);
   };
 
   if (compact) {
