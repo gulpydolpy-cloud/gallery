@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { deleteVideo, fetchFeed } from "@/lib/videos";
+import { adminGrantBadge } from "@/lib/achievements";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -82,10 +83,18 @@ function AdminPage() {
     await supabase.from("reports").update({ status: "resolved" }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["admin-reports"] });
   };
-  const unban = async (id: string) => {
+   const unban = async (id: string) => {
     await supabase.from("bans").delete().eq("id", id);
     toast.success("Ban lifted");
     qc.invalidateQueries({ queryKey: ["admin-bans"] });
+  };
+  const grantBadge = async (targetId: string, badgeId: "rose_vip" | "verified_creator") => {
+    try {
+      await adminGrantBadge(targetId, badgeId);
+      toast.success("Badge granted");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   };
 
   return (
@@ -125,7 +134,13 @@ function AdminPage() {
                 <p className="truncate text-sm font-semibold">{u.display_name || u.username}</p>
                 <p className="truncate text-xs text-muted-foreground">@{u.username}</p>
               </Link>
-              {u.id !== user?.id && <Button variant="destructive" size="sm" onClick={() => setBanTarget(u)}>Ban</Button>}
+               {u.id !== user?.id && (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => grantBadge(u.id, "rose_vip")}>🌹 VIP</Button>
+                  <Button variant="outline" size="sm" onClick={() => grantBadge(u.id, "verified_creator")}>✅ Verify</Button>
+                  <Button variant="destructive" size="sm" onClick={() => setBanTarget(u)}>Ban</Button>
+                </>
+              )}
             </div>
           ))}
         </TabsContent>
