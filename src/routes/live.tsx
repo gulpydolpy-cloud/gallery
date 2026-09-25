@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { LiveRoomView } from "@/components/LiveRoomView";
 import { useAuth } from "@/lib/auth";
 import { startLive, useLiveSessions } from "@/lib/live";
+import { checkAchievements } from "@/lib/achievements";
 
 export const Route = createFileRoute("/live")({
   head: () => ({
@@ -54,8 +55,9 @@ function LivePage() {
     if (!user) return navigate({ to: "/auth" });
     setStarting(true);
     try {
-      const id = await startLive(title.trim() || "Live");
+            const id = await startLive(title.trim() || "Live");
       setOpen(false);
+      void checkAchievements(user.id);
       navigate({ to: "/live/$id", params: { id } });
     } catch (err) {
       toast.error((err as Error).message);
