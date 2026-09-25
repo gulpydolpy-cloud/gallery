@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { checkAchievements, tryAwardNightOwl } from "@/lib/achievements";
 
 export type Profile = Tables<"profiles">;
 
@@ -51,9 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .limit(1)
         .maybeSingle(),
     ]);
-    setProfile(p.data ?? null);
+        setProfile(p.data ?? null);
     setIsAdmin(Boolean(r.data));
     setBan(b.data ?? null);
+    void checkAchievements(userId);
+    void tryAwardNightOwl();
   };
 
   useEffect(() => {
