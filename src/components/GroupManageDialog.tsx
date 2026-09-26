@@ -90,17 +90,16 @@ export function GroupManageDialog({
     }
   };
 
-  const handlePromoteAdmin = async (targetId: string) => {
+   const handlePromoteAdmin = async (targetId: string) => {
     if (adminCount >= 4) {
       toast.error("You can have at most 4 admins in this group");
       return;
     }
     try {
-      const { error } = await supabase
-        .from("conversation_members")
-        .update({ role: "admin" })
-        .eq("conversation_id", conversation.id)
-        .eq("user_id", targetId);
+      const { error } = await supabase.rpc("add_conversation_admin", {
+        _conversation_id: conversation.id,
+        _target: targetId,
+      });
 
       if (error) throw error;
       toast.success("Admin added!");
@@ -112,11 +111,10 @@ export function GroupManageDialog({
 
   const handleDemoteAdmin = async (targetId: string) => {
     try {
-      const { error } = await supabase
-        .from("conversation_members")
-        .update({ role: "member" })
-        .eq("conversation_id", conversation.id)
-        .eq("user_id", targetId);
+      const { error } = await supabase.rpc("remove_conversation_admin", {
+        _conversation_id: conversation.id,
+        _target: targetId,
+      });
 
       if (error) throw error;
       toast.success("Admin role removed");
