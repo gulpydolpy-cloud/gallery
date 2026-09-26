@@ -74,12 +74,26 @@ export async function openDirectConversation(me: string, other: string): Promise
 }
 
 export async function createConversation(me: string, others: string[], name: string | null, isGroup: boolean): Promise<string> {
-  const { data: conv, error } = await supabase.from("conversations").insert({ created_by: me, name, is_group: isGroup }).select("id").single();
+  if (isGroup) {
+    const { data, error } = await supabase.rpc("create_group", {
+      _name: name || "Group",
+      _member_ids: Array.from(new Set([me, ...others])),
+    });
+    if (error) throw error;
+    return data as string;
+  }
+
+  const { data: conv, error } = await supabase
+    .from("conversations")
+    .insert({ created_by: me, name: null, is_group: false })
+    .select("id")
+    .single();
   if (error) throw error;
+
   const rows = Array.from(new Set([me, ...others])).map((user_id) => ({
     conversation_id: conv.id,
     user_id,
-    role: user_id === me ? "owner" : "member",
+    role: "member",
   }));
   const { error: mErr } = await supabase.from("conversation_members").insert(rows);
   if (mErr) throw mErr;
