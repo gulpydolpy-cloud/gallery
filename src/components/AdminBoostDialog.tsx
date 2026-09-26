@@ -6,13 +6,23 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminBoost } from "@/lib/videos";
+import { checkAchievements } from "@/lib/achievements";
 
-export function AdminBoostDialog({ videoId, open, onOpenChange }: { videoId: string; open: boolean; onOpenChange: (o: boolean) => void }) {
+export function AdminBoostDialog({
+  videoId,
+  creatorId,
+  open,
+  onOpenChange,
+}: {
+  videoId: string;
+  creatorId?: string;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
   const qc = useQueryClient();
   const [likes, setLikes] = useState("");
   const [views, setViews] = useState("");
   const [busy, setBusy] = useState(false);
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const l = Number(likes || 0);
@@ -21,6 +31,11 @@ export function AdminBoostDialog({ videoId, open, onOpenChange }: { videoId: str
     setBusy(true);
     try {
       await adminBoost(videoId, Math.trunc(l), Math.trunc(v));
+            await adminBoost(videoId, Math.trunc(l), Math.trunc(v));
+      if (creatorId) {
+        await checkAchievements(creatorId);
+        qc.invalidateQueries({ queryKey: ["user-badges", creatorId] });
+      }
       toast.success("Counters updated");
       setLikes("");
       setViews("");
