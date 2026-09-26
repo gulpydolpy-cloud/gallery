@@ -1,14 +1,14 @@
 import { AttachmentView } from "@/components/AttachmentView";
 import { StickerImage } from "@/components/StickerPicker";
 import { MediaComposer } from "@/components/MediaComposer";
+import { GroupManageDialog } from "@/components/GroupManageDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Settings, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { conversationTitle, fetchConversations, sendMessage } from "@/lib/chat";
@@ -22,16 +22,23 @@ export const Route = createFileRoute("/_authenticated/inbox/$id")({
 
 function ChatPage() {
   const { id } = Route.useParams();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
-  const [text, setText] = useState("");
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
 
-  const { data: convs = [] } = useQuery({ queryKey: ["conversations", user?.id], queryFn: () => fetchConversations(user!.id), enabled: Boolean(user) });
+  const { data: convs = [] } = useQuery({
+    queryKey: ["conversations", user?.id],
+    queryFn: () => fetchConversations(user!.id),
+    enabled: Boolean(user),
+  });
   const conv = convs.find((c) => c.id === id);
+  const { data: groupAvatarUrl } = useSignedUrl("media", conv?.avatar_path ?? null);
+
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", id],
-    queryFn: async () => (await supabase.from("messages").select("*").eq("conversation_id", id).order("created_at")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("messages").select("*").eq("conversation_id", id).order("created_at")).data ?? [],
   });
 
   useEffect(() => {
@@ -51,27 +58,57 @@ function ChatPage() {
     bottom.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  const memberMap = new Map(conv?.members.map((m) => [m.id, m]) ?? []);
-
-  const send = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim() || !user) return;
-    try {
-      await sendMessage(id, user.id, text.trim());
-      setText("");
-      qc.invalidateQueries({ queryKey: ["messages", id] });
-    } catch (err) {
-      toast.error((err as Error).message);
-    }
-  };
+  const memberMap = new Map((conv?.all_members || conv?.members || []).map((m) => [m.id, m]));
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-2 border-b px-3 py-2">
-        <Button variant="ghost" size="icon" className="md:hidden" asChild><Link to="/inbox"><ArrowLeft /></Link></Button>
-        <h2 className="truncate font-bold">{conv ? conversationTitle(conv) : "Chat"}</h2>
-        {conv?.is_group && <span className="text-xs text-muted-foreground">· {conv.members.length + 1} members</span>}
+      <header className="flex items-center justify-between border-b px-3 py-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="ghost" size="icon" className="md:hidden" asChild>
+            <Link to="/inbox"><ArrowLeft /></Link>
+          </Button>
+
+          {conv?.is_group && (
+            groupAvatarUrl ? (
+              <img
+                src={groupAvatarUrl}
+                alt="Group avatar"
+                className="size-8 rounded-full object-cover border"
+              />
+            ) : (
+              <span className="flex size-8 items-center justify-center rounded-full bg-rose/15 text-rose">
+                <Users className="size-4" />
+              </span>
+            )
+          )}
+
+          <div
+            className={cn("min-w-0", conv?.is_group && "cursor-pointer hover:opacity-80")}
+            onClick={() => conv?.is_group && setGroupSettingsOpen(true)}
+          >
+            <h2 className="truncate font-bold text-sm leading-tight">
+              {conv ? conversationTitle(conv) : "Chat"}
+            </h2>
+            {conv?.is_group && (
+              <p className="truncate text-[11px] text-muted-foreground">
+                {(conv.all_members?.length || conv.members.length + 1)} members · Tap for info
+              </p>
+            )}
+          </div>
+        </div>
+
+        {conv?.is_group && user && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setGroupSettingsOpen(true)}
+            aria-label="Group settings"
+          >
+            <Settings className="size-4" />
+          </Button>
+        )}
       </header>
+
       <div className="flex-1 space-y-2 overflow-y-auto p-3">
         {messages.map((m) => {
           const mine = m.sender_id === user?.id;
@@ -80,16 +117,20 @@ function ChatPage() {
             <div key={m.id} className={cn("flex items-end gap-2", mine && "flex-row-reverse")}>
               {!mine && sender && <UserAvatar profile={sender} size="xs" />}
               <div className={cn("max-w-[75%] space-y-1", mine && "items-end")}>
-                {!mine && conv?.is_group && sender && <p className="px-1 text-[10px] text-muted-foreground">@{sender.username}</p>}
-    {m.video_id ? <SharedVideo id={m.video_id} /> : null}
-{m.content?.startsWith("STICKER_PACK:") ? (
-  <SharedStickerPack rawContent={m.content} />
-) : (
-  m.content && (!m.video_id || m.content !== "Shared a video") && (
-    <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>{m.content}</p>
-  )
-)}
-                
+                {!mine && conv?.is_group && sender && (
+                  <p className="px-1 text-[10px] text-muted-foreground">@{sender.username}</p>
+                )}
+                {m.video_id ? <SharedVideo id={m.video_id} /> : null}
+                {m.content?.startsWith("STICKER_PACK:") ? (
+                  <SharedStickerPack rawContent={m.content} />
+                ) : (
+                  m.content && (!m.video_id || m.content !== "Shared a video") && (
+                    <p className={cn("rounded-2xl px-3 py-2 text-sm break-words", mine ? "bg-rose text-rose-foreground" : "bg-secondary")}>
+                      {m.content}
+                    </p>
+                  )
+                )}
+
                 <AttachmentView
                   image_path={m.image_path}
                   sticker_path={m.sticker_path}
@@ -106,7 +147,7 @@ function ChatPage() {
 
       <div className="border-t p-3">
         {user && (
-                 <MediaComposer
+          <MediaComposer
             userId={user.id}
             placeholder="Message…"
             onSend={async (content, attachment) => {
@@ -123,12 +164,29 @@ function ChatPage() {
           />
         )}
       </div>
+
+      {conv?.is_group && user && (
+        <GroupManageDialog
+          conversation={conv}
+          currentUserId={user.id}
+          isSiteAdmin={isAdmin}
+          open={groupSettingsOpen}
+          onOpenChange={setGroupSettingsOpen}
+        />
+      )}
     </div>
   );
 }
 
 function SharedVideo({ id }: { id: string }) {
-  const { data: video } = useQuery({ queryKey: ["video-lite", id], queryFn: async () => (await supabase.from("videos").select("id, title, storage_path").eq("id", id).maybeSingle()).data as Pick<Tables<"videos">, "id" | "title" | "storage_path"> | null });
+  const { data: video } = useQuery({
+    queryKey: ["video-lite", id],
+    queryFn: async () =>
+      (await supabase.from("videos").select("id, title, storage_path").eq("id", id).maybeSingle()).data as Pick<
+        Tables<"videos">,
+        "id" | "title" | "storage_path"
+      > | null,
+  });
   const { data: src } = useSignedUrl("videos", video?.storage_path);
   if (!video) return <p className="rounded-2xl bg-secondary px-3 py-2 text-xs text-muted-foreground">Video unavailable</p>;
   return (
@@ -140,70 +198,48 @@ function SharedVideo({ id }: { id: string }) {
 }
 
 function SharedStickerPack({ rawContent }: { rawContent: string }) {
-  
+  const qc = useQueryClient();
   const parts = rawContent.split(":");
   const packId = parts[1] ?? "";
-  const packName = parts[2] ?? "";
-  const qc = useQueryClient();
-  const [saved, setSaved] = useState(() => {
-    try {
-      const list = JSON.parse(localStorage.getItem("gallery_saved_packs") || "[]");
-      return list.includes(packId);
-    } catch {
-      return false;
-    }
+  const packName = parts[2] ?? "Sticker Pack";
+
+  const { data: stickers = [] } = useQuery({
+    queryKey: ["stickers-preview", packId],
+    queryFn: async () =>
+      (await supabase.from("stickers").select("*").eq("pack_id", packId).order("sort").limit(4)).data ?? [],
+    enabled: Boolean(packId),
   });
 
-  const { data: pack } = useQuery({
-    queryKey: ["sticker-pack-preview", packId],
-    queryFn: async () => {
-      const [{ data: p }, { data: s }] = await Promise.all([
-        supabase.from("sticker_packs").select("id, name").eq("id", packId).maybeSingle(),
-        supabase.from("stickers").select("id, storage_path").eq("pack_id", packId).order("sort").limit(4),
-      ]);
-      return { ...p, stickers: s ?? [] };
-    },
-  });
-
-  const handleSave = () => {
+  const savePack = () => {
     try {
-      const list: string[] = JSON.parse(localStorage.getItem("gallery_saved_packs") || "[]");
-      if (!list.includes(packId)) {
-        list.push(packId);
-        localStorage.setItem("gallery_saved_packs", JSON.stringify(list));
+      const savedStr = localStorage.getItem("gallery_saved_packs") || "[]";
+      const saved: string[] = JSON.parse(savedStr);
+      if (!saved.includes(packId)) {
+        saved.push(packId);
+        localStorage.setItem("gallery_saved_packs", JSON.stringify(saved));
+        qc.invalidateQueries({ queryKey: ["sticker-packs"] });
+        toast.success(`Saved "${packName}" to your stickers!`);
+      } else {
+        toast.info("Pack is already saved!");
       }
-      setSaved(true);
-      toast.success(`Pack "${packName || "Stickers"}" added to your stickers!`);
-      qc.invalidateQueries({ queryKey: ["sticker-packs"] });
     } catch {
       toast.error("Could not save pack");
     }
   };
 
   return (
-    <div className="w-56 space-y-2 rounded-2xl border bg-card p-3 shadow-sm">
-      <div className="flex items-center justify-between">
-        <p className="truncate font-bold text-xs">{packName || pack?.name || "Sticker Pack"}</p>
-        <span className="text-[10px] text-muted-foreground">{pack?.stickers.length ?? 0} stickers</span>
-      </div>
-      <div className="grid grid-cols-4 gap-1 rounded-lg bg-secondary/40 p-1">
-        {pack?.stickers.map((stk) => (
-          <div key={stk.id} className="aspect-square">
-            <StickerImage path={stk.storage_path} className="size-full" />
+    <div className="rounded-2xl border bg-card p-3 space-y-2 max-w-[240px]">
+      <p className="font-bold text-xs truncate">📦 {packName}</p>
+      <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1">
+        {stickers.map((s) => (
+          <div key={s.id} className="size-12 flex items-center justify-center">
+            <StickerImage path={s.storage_path} />
           </div>
         ))}
       </div>
-      <Button
-        type="button"
-        size="sm"
-        variant={saved ? "secondary" : "rose"}
-        className="w-full text-xs font-semibold"
-        onClick={handleSave}
-        disabled={saved}
-      >
-        {saved ? "Saved ✓" : "Save Pack"}
+      <Button size="sm" variant="outline" className="w-full text-xs h-7" onClick={savePack}>
+        Save Pack
       </Button>
     </div>
   );
 }
-
