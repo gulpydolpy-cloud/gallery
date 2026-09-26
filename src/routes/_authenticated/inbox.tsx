@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Plus, Users } from "lucide-react";
+import { Plus, Radio, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -11,6 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { conversationTitle, createConversation, fetchConversations } from "@/lib/chat";
+import { useMyChannelInbox } from "@/lib/channels";
+import { useSignedUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/inbox")({
@@ -39,8 +41,14 @@ function InboxLayout() {
       <aside className={cn("w-full shrink-0 flex-col border-r md:flex md:w-80", inChat ? "hidden" : "flex")}>
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-xl font-extrabold">Inbox</h1>
-          <Button variant="ghost" size="icon" onClick={() => setNewChat(true)} aria-label="New chat"><Plus /></Button>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/channels"><Radio className="size-4" /> Channels</Link>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setNewChat(true)} aria-label="New chat"><Plus /></Button>
+          </div>
         </div>
+        <MyChannelsStrip userId={user?.id} />
         <div className="flex-1 overflow-y-auto">
           {convs.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">No chats yet. Start one with the + button or from someone's profile.</p>}
           {convs.map((c) => (
