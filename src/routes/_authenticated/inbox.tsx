@@ -145,3 +145,38 @@ function NewChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     </Dialog>
   );
 }
+
+
+function MyChannelsStrip({ userId }: { userId: string | undefined }) {
+  const { data: channels = [] } = useMyChannelInbox(userId);
+  if (channels.length === 0) return null;
+  return (
+    <div className="border-b">
+      <p className="px-4 pt-2 text-xs font-bold uppercase text-muted-foreground">Channels</p>
+      {channels.map((c) => (
+        <ChannelInboxRow key={c.id} channel={c} />
+      ))}
+    </div>
+  );
+}
+
+function ChannelInboxRow({ channel }: { channel: { id: string; name: string; avatar_path: string | null; is_active: boolean; isOwner: boolean; last?: { content: string | null } } }) {
+  const { data: avatarUrl } = useSignedUrl("avatars", channel.avatar_path);
+  return (
+    <Link to="/channels/$id" params={{ id: channel.id }} className="flex items-center gap-3 px-4 py-3 hover:bg-accent">
+      {avatarUrl ? (
+        <img src={avatarUrl} alt="" className="size-12 rounded-full object-cover" />
+      ) : (
+        <span className="flex size-12 items-center justify-center rounded-full bg-rose/15 text-rose"><Radio /></span>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-semibold">
+          {channel.name}
+          {channel.isOwner && <span className="ml-1.5 rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-bold">Owner</span>}
+          {!channel.is_active && <span className="ml-1.5 text-xs font-normal text-muted-foreground">(deactivated)</span>}
+        </p>
+        <p className="truncate text-sm text-muted-foreground">{channel.last?.content || "No posts yet"}</p>
+      </div>
+    </Link>
+  );
+}
