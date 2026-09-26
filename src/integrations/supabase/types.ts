@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          description: string
+          emoji: string
+          g_dollar_reward: number
+          id: string
+          is_admin_only: boolean
+          name: string
+        }
+        Insert: {
+          description: string
+          emoji?: string
+          g_dollar_reward?: number
+          id: string
+          is_admin_only?: boolean
+          name: string
+        }
+        Update: {
+          description?: string
+          emoji?: string
+          g_dollar_reward?: number
+          id?: string
+          is_admin_only?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
@@ -157,11 +184,50 @@ export type Database = {
           },
         ]
       }
+      conversation_reports: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          details: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          details?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          details?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           avatar_path: string | null
           created_at: string
           created_by: string
+          description: string
           id: string
           is_group: boolean
           name: string | null
@@ -170,6 +236,7 @@ export type Database = {
           avatar_path?: string | null
           created_at?: string
           created_by: string
+          description?: string
           id?: string
           is_group?: boolean
           name?: string | null
@@ -178,6 +245,7 @@ export type Database = {
           avatar_path?: string | null
           created_at?: string
           created_by?: string
+          description?: string
           id?: string
           is_group?: boolean
           name?: string | null
@@ -272,6 +340,44 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      group_reports: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          details: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          details?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          details?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       likes: {
         Row: {
@@ -661,6 +767,35 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          displayed: boolean
+          earned_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          displayed?: boolean
+          earned_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          displayed?: boolean
+          earned_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -752,15 +887,53 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_conversation_admin: {
+        Args: { _conversation_id: string; _target: string }
+        Returns: undefined
+      }
+      add_group_admin: {
+        Args: { _conversation_id: string; _target: string }
+        Returns: undefined
+      }
+      add_guest: {
+        Args: { _session_id: string; _target: string }
+        Returns: number
+      }
       admin_boost: {
         Args: { _likes: number; _video_id: string; _views: number }
         Returns: undefined
       }
+      admin_grant_badge: {
+        Args: { _badge_id: string; _target: string }
+        Returns: undefined
+      }
+      admin_revoke_badge: {
+        Args: { _badge_id: string; _target: string }
+        Returns: undefined
+      }
+      award_badge_internal: {
+        Args: { _badge_id: string; _user_id: string }
+        Returns: boolean
+      }
+      check_achievements: {
+        Args: { _user_id: string }
+        Returns: {
+          badge_id: string
+          g_dollar_reward: number
+          name: string
+        }[]
+      }
+      create_group: {
+        Args: { _member_ids: string[]; _name: string }
+        Returns: string
+      }
+      delete_group: { Args: { _conversation_id: string }; Returns: undefined }
       delete_live_chat_message: {
         Args: { _message_id: string }
         Returns: undefined
       }
       end_live: { Args: { _session_id: string }; Returns: undefined }
+      get_email_for_username: { Args: { _username: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -775,18 +948,47 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_group_privileged: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_member: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
       join_live: { Args: { _session_id: string }; Returns: number }
+      kick_group_member: {
+        Args: { _conversation_id: string; _target: string }
+        Returns: undefined
+      }
       kick_participant: {
         Args: { _session_id: string; _target: string }
         Returns: undefined
       }
+      leave_conversation: {
+        Args: { _conversation_id: string }
+        Returns: undefined
+      }
+      leave_group: { Args: { _conversation_id: string }; Returns: undefined }
       leave_live: { Args: { _session_id: string }; Returns: undefined }
       like_live: { Args: { _session_id: string }; Returns: number }
       register_view: { Args: { _video_id: string }; Returns: boolean }
+      remove_conversation_admin: {
+        Args: { _conversation_id: string; _target: string }
+        Returns: undefined
+      }
+      remove_group_admin: {
+        Args: { _conversation_id: string; _target: string }
+        Returns: undefined
+      }
+      report_conversation: {
+        Args: { _conversation_id: string; _details?: string; _reason: string }
+        Returns: undefined
+      }
+      report_group: {
+        Args: { _conversation_id: string; _details: string; _reason: string }
+        Returns: undefined
+      }
       send_gift: {
         Args: {
           _gift_type_id: string
@@ -802,7 +1004,32 @@ export type Database = {
         Args: { _content: string; _session_id: string }
         Returns: string
       }
+      send_live_gift: {
+        Args: { _gift_type_id: string; _session_id: string }
+        Returns: {
+          animation_key: string
+          recipient_count: number
+        }[]
+      }
+      set_profile_badges: { Args: { _badge_ids: string[] }; Returns: undefined }
       start_live: { Args: { _title: string }; Returns: string }
+      try_award_night_owl: {
+        Args: { _local_hour: number }
+        Returns: {
+          badge_id: string
+          g_dollar_reward: number
+          name: string
+        }[]
+      }
+      update_group_settings: {
+        Args: {
+          _avatar_path: string
+          _conversation_id: string
+          _description: string
+          _name: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
