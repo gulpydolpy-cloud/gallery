@@ -275,7 +275,7 @@ export function VideoCard({ video, active }: Props) {
           }}
         />
       )}
-      {isAdmin && <AdminBoostDialog videoId={video.id} open={boost} onOpenChange={setBoost} />}
+{isAdmin && <AdminBoostDialog videoId={video.id} creatorId={video.user_id} open={boost} onOpenChange={setBoost} />}
     </div>
   );
 }
