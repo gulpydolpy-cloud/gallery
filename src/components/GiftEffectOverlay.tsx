@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { playGiftSound } from "@/lib/sounds";
+import { playGiftSound } from "@/lib/sound";
 
 const DURATIONS: Record<string, number> = {
   rose_burst: 3200,
